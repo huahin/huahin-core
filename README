@@ -1,0 +1,3 @@
+Huahin is simple Java framework for Hadoop MapReduce.
+Huahin can developement easily than normal MapReduce.
+Huahin is unlike Hive and Pig, are purpose to be develop flexible native Java MapReduce.
