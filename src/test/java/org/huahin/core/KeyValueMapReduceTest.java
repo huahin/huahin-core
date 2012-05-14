@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.huahin.core.io;
+package org.huahin.core;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,6 +32,8 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mrunit.mapreduce.MapReduceDriver;
 import org.apache.hadoop.mrunit.types.Pair;
 
+import org.huahin.core.io.Key;
+import org.huahin.core.io.Value;
 import org.junit.Before;
 import org.junit.Test;
 

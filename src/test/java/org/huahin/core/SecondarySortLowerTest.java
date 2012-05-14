@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.huahin.core.io;
+package org.huahin.core;
 
 import static org.junit.Assert.*;
 
@@ -28,6 +28,9 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mrunit.mapreduce.MapReduceDriver;
 import org.apache.hadoop.mrunit.types.Pair;
+import org.huahin.core.io.Key;
+import org.huahin.core.io.Record;
+import org.huahin.core.io.Value;
 import org.huahin.core.lib.partition.SimpleGroupingComparator;
 import org.huahin.core.lib.partition.SimpleSortComparator;
 import org.junit.Before;
@@ -36,7 +39,7 @@ import org.junit.Test;
 /**
  *
  */
-public class SecondarySortUpperTest {
+public class SecondarySortLowerTest {
     private class KeyValueMapTestMapper extends Mapper<LongWritable, Text, Key, Value> {
         public void map(LongWritable key, Text value, Context context)
                 throws java.io.IOException ,InterruptedException {
@@ -49,8 +52,8 @@ public class SecondarySortUpperTest {
             String pv = inputs[2];
 
             emitKey.addPrimitiveValue("domain",domain);
-            emitKey.addPrimitiveValue("uu", uu, Record.SORT_UPPER, 1);
-            emitKey.addPrimitiveValue("pv", pv, Record.SORT_UPPER, 2);
+            emitKey.addPrimitiveValue("uu", uu, Record.SORT_LOWER, 1);
+            emitKey.addPrimitiveValue("pv", pv, Record.SORT_LOWER, 2);
 
             emitValue.addPrimitiveValue("uu", uu);
             emitValue.addPrimitiveValue("pv", pv);
@@ -103,8 +106,8 @@ public class SecondarySortUpperTest {
         // ========= key0 =========
         key.clear();
         key.addPrimitiveValue("domain", "domain");
-        key.addPrimitiveValue("uu", 50, Record.SORT_UPPER, 1);
-        key.addPrimitiveValue("pv", 500, Record.SORT_UPPER, 2);
+        key.addPrimitiveValue("uu", 10, Record.SORT_LOWER, 1);
+        key.addPrimitiveValue("pv", 200, Record.SORT_LOWER, 2);
 
         // ---------- 0 ----------
         result = actual.get(0);
@@ -112,8 +115,8 @@ public class SecondarySortUpperTest {
         resultValue = result.getSecond();
 
         value.clear();
-        value.addPrimitiveValue("uu", "50");
-        value.addPrimitiveValue("pv", "500");
+        value.addPrimitiveValue("uu", "10");
+        value.addPrimitiveValue("pv", "200");
 
         assertEquals(key, resultKey);
         assertEquals(value, resultValue);
@@ -121,29 +124,11 @@ public class SecondarySortUpperTest {
         // ========= key1 =========
         key.clear();
         key.addPrimitiveValue("domain", "domain");
-        key.addPrimitiveValue("uu", 20, Record.SORT_UPPER, 1);
-        key.addPrimitiveValue("pv", 100, Record.SORT_UPPER, 2);
+        key.addPrimitiveValue("uu", 10, Record.SORT_LOWER, 1);
+        key.addPrimitiveValue("pv", 300, Record.SORT_LOWER, 2);
 
         // ---------- 1 ----------
         result = actual.get(1);
-        resultKey = result.getFirst();
-        resultValue = result.getSecond();
-
-        value.clear();
-        value.addPrimitiveValue("uu", "20");
-        value.addPrimitiveValue("pv", "100");
-
-        assertEquals(key, resultKey);
-        assertEquals(value, resultValue);
-
-        // ========= key2 =========
-        key.clear();
-        key.addPrimitiveValue("domain", "domain");
-        key.addPrimitiveValue("uu", 10, Record.SORT_UPPER, 1);
-        key.addPrimitiveValue("pv", 300, Record.SORT_UPPER, 2);
-
-        // ---------- 2 ----------
-        result = actual.get(2);
         resultKey = result.getFirst();
         resultValue = result.getSecond();
 
@@ -154,11 +139,29 @@ public class SecondarySortUpperTest {
         assertEquals(key, resultKey);
         assertEquals(value, resultValue);
 
+        // ========= key2 =========
+        key.clear();
+        key.addPrimitiveValue("domain", "domain");
+        key.addPrimitiveValue("uu", 20, Record.SORT_LOWER, 1);
+        key.addPrimitiveValue("pv", 100, Record.SORT_LOWER, 2);
+
+        // ---------- 2 ----------
+        result = actual.get(2);
+        resultKey = result.getFirst();
+        resultValue = result.getSecond();
+
+        value.clear();
+        value.addPrimitiveValue("uu", "20");
+        value.addPrimitiveValue("pv", "100");
+
+        assertEquals(key, resultKey);
+        assertEquals(value, resultValue);
+
         // ========= key3 =========
         key.clear();
         key.addPrimitiveValue("domain", "domain");
-        key.addPrimitiveValue("uu", 10, Record.SORT_UPPER, 1);
-        key.addPrimitiveValue("pv", 200, Record.SORT_UPPER, 2);
+        key.addPrimitiveValue("uu", 50, Record.SORT_LOWER, 1);
+        key.addPrimitiveValue("pv", 500, Record.SORT_LOWER, 2);
 
         // ---------- 2 ----------
         result = actual.get(3);
@@ -166,8 +169,8 @@ public class SecondarySortUpperTest {
         resultValue = result.getSecond();
 
         value.clear();
-        value.addPrimitiveValue("uu", "10");
-        value.addPrimitiveValue("pv", "200");
+        value.addPrimitiveValue("uu", "50");
+        value.addPrimitiveValue("pv", "500");
 
         assertEquals(key, resultKey);
         assertEquals(value, resultValue);
