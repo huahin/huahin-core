@@ -31,12 +31,12 @@ public class StringUtil {
     /**
      * comma: ','
      */
-    public static final char COMMA = ',';
+    public static final String COMMA = ",";
 
     /**
      * tab: '\t'
      */
-    public static final char TAB = '\t';
+    public static final String TAB = "\t";
 
     /**
      * job ID prefix
@@ -59,15 +59,17 @@ public class StringUtil {
      * @param trim include the last separator
      * @return the array of strings computed by splitting this string around matches of the given separator
      */
-    public static String[] split(String str, char separator, boolean trim) {
+    public static String[] split(String str, String separator, boolean trim) {
         if (str == null) {
             return null;
         }
 
+        char sep = separator.charAt(0);
+
         ArrayList<String> strList = new ArrayList<String>();
         StringBuilder split = new StringBuilder();
         int index = 0;
-        while ((index = StringUtils.findNext(str, separator, StringUtils.ESCAPE_CHAR, index, split)) >= 0) {
+        while ((index = StringUtils.findNext(str, sep, StringUtils.ESCAPE_CHAR, index, split)) >= 0) {
             ++index; // move over the separator for next search
             strList.add(split.toString());
             split.setLength(0); // reset the buffer

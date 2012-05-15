@@ -70,6 +70,7 @@ public abstract class Filter extends Mapper<Writable, Writable, Key, Value> {
     private Context context;
     private MapperWriter writer = new MapperWriter();
     private String[] labels;
+    private String separator;
     private boolean first;
     private boolean formatIgnored;
 
@@ -88,7 +89,7 @@ public abstract class Filter extends Mapper<Writable, Writable, Key, Value> {
 
             record.addGrouping("KEY", k.get());
 
-            String[] strings = StringUtil.split(v.toString(), StringUtil.TAB, false);
+            String[] strings = StringUtil.split(v.toString(), separator, false);
             if (labels.length != strings.length) {
                 if (formatIgnored) {
                     throw new DataFormatException("input format error: " +
@@ -120,6 +121,7 @@ public abstract class Filter extends Mapper<Writable, Writable, Key, Value> {
         first = context.getConfiguration().getBoolean(SimpleJob.FIRST, false);
         formatIgnored = context.getConfiguration().getBoolean(SimpleJob.FORMAT_IGNORED, false);
         labels = context.getConfiguration().getStrings(SimpleJob.LABELS);
+        separator = context.getConfiguration().get(SimpleJob.SEPARATOR, StringUtil.COMMA);
         filterSetup();
     }
 

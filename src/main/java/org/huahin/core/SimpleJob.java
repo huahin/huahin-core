@@ -35,6 +35,7 @@ import org.huahin.core.lib.partition.SimpleSortComparator;
  */
 public class SimpleJob extends Job {
     public static final String LABELS = "LABELS";
+    public static final String SEPARATOR = "SEPARATOR";
     public static final String FIRST = "FIRST";
     public static final String FORMAT_IGNORED = "FORMAT_IGNORED";
 

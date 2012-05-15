@@ -193,42 +193,46 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      * @throws IOException
      */
     protected SimpleJob addJob() throws IOException {
-        return addJob(new SimpleJob(conf, jobName), null, false);
+        return addJob(new SimpleJob(conf, jobName), null, null, false);
     }
 
     /**
      * @param labels label of input data
+     * @param separator separator of data
      * @return new {@link SimpleJob} class
      * @throws IOException
      */
-    protected SimpleJob addJob(String[] labels) throws IOException {
-        return addJob(new SimpleJob(conf, jobName), labels, false);
+    protected SimpleJob addJob(String[] labels, String separator) throws IOException {
+        return addJob(new SimpleJob(conf, jobName), labels, separator, false);
     }
 
     /**
      * @param labels label of input data
+     * @param separator separator of data
      * @param formatIgnored
      * If true, {@link DataFormatException} will be throw if there is a format error.
      * If false is ignored (default).
      * @return new {@link SimpleJob} class
      * @throws IOException
      */
-    protected SimpleJob addJob(String[] labels, boolean formatIgnored) throws IOException {
-        return addJob(new SimpleJob(conf, jobName), labels, formatIgnored);
+    protected SimpleJob addJob(String[] labels, String separator, boolean formatIgnored) throws IOException {
+        return addJob(new SimpleJob(conf, jobName), labels, separator, formatIgnored);
     }
 
     /**
      * @param job new {@link SimpleJob}
      * @param labels label of input data
+     * @param separator separator of data
      * @param formatIgnored
      * If true, {@link DataFormatException} will be throw if there is a format error.
      * If false is ignored (default).
      * @return new {@link SimpleJob} class
      * @throws IOException
      */
-    protected SimpleJob addJob(SimpleJob job, String[] labels, boolean formatIgnored) throws IOException {
+    protected SimpleJob addJob(SimpleJob job, String[] labels, String separator, boolean formatIgnored) throws IOException {
         if (labels != null) {
             job.getConfiguration().setStrings(SimpleJob.LABELS, labels);
+            job.getConfiguration().set(SimpleJob.SEPARATOR, separator);
         }
 
         job.setJarByClass(SimpleJobTool.class);
