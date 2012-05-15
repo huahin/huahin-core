@@ -54,7 +54,7 @@ import org.huahin.core.util.StringUtil;
  *     final String[] labels = new String[] { "USER", "DATE", "REFERER", "URL" };
  *
  *     // Labeled the first job
- *     SimpleJob job1 = addJob(labels);
+ *     SimpleJob job1 = addJob(labels, StringUtil.TAB);
  *     job1.setFilter(FirstFilter.class);
  *     job1.setSummaizer(FirstSummarizer.class);
  *
