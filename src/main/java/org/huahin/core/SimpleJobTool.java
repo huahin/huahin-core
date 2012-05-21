@@ -71,7 +71,7 @@ public abstract class SimpleJobTool extends Configured implements Tool {
     private static final String INTERMEDIATE_PATH = "%s-%s-intermediate-%d";
     private String jobName;
 
-    private SequencalJobChain sequencalJobChain = new SequencalJobChain();
+    protected SequencalJobChain sequencalJobChain = new SequencalJobChain();
 
     protected Configuration conf;
 
