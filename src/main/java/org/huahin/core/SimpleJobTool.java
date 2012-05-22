@@ -69,7 +69,7 @@ import org.huahin.core.util.StringUtil;
  */
 public abstract class SimpleJobTool extends Configured implements Tool {
     private static final String INTERMEDIATE_PATH = "%s-%s-intermediate-%d";
-    private String jobName;
+    protected String jobName;
 
     protected SequencalJobChain sequencalJobChain = new SequencalJobChain();
 
