@@ -27,6 +27,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.huahin.core.util.HadoopObject;
 import org.huahin.core.util.ObjectUtil;
+import org.huahin.core.util.StringUtil;
 
 /**
  * This class is to set the Key of Hadoop.
@@ -69,7 +70,7 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
         for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
             KeyDetail kd = (KeyDetail) entry.getKey();
             if (kd.getGrouping()) {
-                sb.append(entry.getValue().toString()).append("\t");
+                sb.append(entry.getValue().toString()).append(StringUtil.TAB);
             }
         }
 

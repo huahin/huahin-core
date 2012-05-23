@@ -25,6 +25,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.huahin.core.util.HadoopObject;
 import org.huahin.core.util.ObjectUtil;
+import org.huahin.core.util.StringUtil;
 
 /**
  * This class is to set the Value of Hadoop.
@@ -57,13 +58,13 @@ public class Value extends AbstractWritable {
             if (w instanceof ArrayWritable) {
                 ArrayWritable aw = (ArrayWritable) w;
                 for (Writable x : aw.get()) {
-                    sb.append(x.toString()).append("\t");
+                    sb.append(x.toString()).append(StringUtil.TAB);
                 }
             } else if (w instanceof MapWritable) {
                 MapWritable mw = (MapWritable) w;
                 for (Entry<Writable, Writable> entry : mw.entrySet()){
-                    sb.append(entry.getKey().toString().toString()).append("\t")
-                      .append(entry.getValue().toString().toString()).append("\t");
+                    sb.append(entry.getKey().toString().toString()).append(StringUtil.TAB)
+                      .append(entry.getValue().toString().toString()).append(StringUtil.TAB);
                 }
             } else {
                 sb.append(w.toString()).append("\t");
