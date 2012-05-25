@@ -19,17 +19,75 @@ package org.huahin.core;
 
 import java.io.IOException;
 
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.huahin.core.io.Record;
 
 /**
- * This interface is wrapping Context#write.
+ * Writer is wrapping Context#write.
  */
-public interface Writer {
+public class Writer {
+    private Record defaultRecord;
+
+    @SuppressWarnings("rawtypes")
+    private TaskInputOutputContext context;
+
     /**
      * Outputs the Record.
+     * <p>If the grouping and value is not specified, input is output as it is.</p>
      * @param record write Record
      * @throws IOException
      * @throws InterruptedException
      */
-    public void write(Record record) throws IOException, InterruptedException;
+    @SuppressWarnings("unchecked")
+    public void write(Record record)
+            throws IOException, InterruptedException {
+        if (record.isKeyEmpty()) {
+            record.setKey(defaultRecord.getKey());
+        } else {
+            if (record.getKey().isGroupingEmpty() &&
+                !record.getKey().isSortEmpty()) {
+                defaultRecord.getKey().clearSort();
+                defaultRecord.getKey().setSort(record.getKey().getSort());
+                record.setKey(defaultRecord.getKey());
+            }
+        }
+
+        if (record.isValueEmpty()) {
+            record.setValue(defaultRecord.getValue());
+        }
+
+        context.write(record.isGroupingNothing() ? NullWritable.get() : record.getKey(),
+                      record.isValueNothing() ? NullWritable.get() : record.getValue());
+    }
+
+    /**
+     * @return the defaultRecord
+     */
+    public Record getDefaultRecord() {
+        return defaultRecord;
+    }
+
+    /**
+     * @param defaultRecord the defaultRecord to set
+     */
+    public void setDefaultRecord(Record defaultRecord) {
+        this.defaultRecord = defaultRecord;
+    }
+
+    /**
+     * @return the context
+     */
+    @SuppressWarnings("rawtypes")
+    public TaskInputOutputContext getContext() {
+        return context;
+    }
+
+    /**
+     * @param context the context to set
+     */
+    @SuppressWarnings("rawtypes")
+    public void setContext(TaskInputOutputContext context) {
+        this.context = context;
+    }
 }

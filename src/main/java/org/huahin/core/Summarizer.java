@@ -67,7 +67,7 @@ import org.huahin.core.io.Record;
  */
 public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
     private Context context;
-    private ReducerWriter writer = new ReducerWriter();
+    private Writer writer = new Writer();
 
     /**
      * {@inheritDoc}

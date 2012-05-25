@@ -17,6 +17,8 @@
  */
 package org.huahin.core.io;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.io.IntWritable;
@@ -107,12 +109,55 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
         return smw;
     }
 
-    /**
-     * Returns if true, values is nothing.
-     * @return If true, values is nothing
-     */
-    public boolean isEmpty() {
-        return writableMap.isEmpty();
+    @SuppressWarnings("rawtypes")
+    public SortedMapWritable getSort() {
+        SortedMapWritable smw = new SortedMapWritable();
+        for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
+            KeyDetail kd = (KeyDetail) entry.getKey();
+            if (kd.getSort() != Record.SORT_NON) {
+                smw.put(kd, entry.getValue());
+            }
+        }
+
+        return smw;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void setSort(SortedMapWritable smw) {
+        for (Entry<WritableComparable, Writable> entry : smw.entrySet()) {
+            KeyDetail kd = (KeyDetail) entry.getKey();
+            kd.setOrder(++order);
+            writableMap.put(kd, entry.getValue());
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void clearSort() {
+        List<KeyDetail> removes = new ArrayList<KeyDetail>();
+        for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
+            KeyDetail kd = (KeyDetail) entry.getKey();
+            if (kd.getSort() != Record.SORT_NON) {
+                removes.add(kd);
+            }
+        }
+
+        for (KeyDetail kd : removes) {
+            order--;
+            writableMap.remove(kd);
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    public SortedMapWritable getGrouping() {
+        SortedMapWritable smw = new SortedMapWritable();
+        for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
+            KeyDetail kd = (KeyDetail) entry.getKey();
+            if (kd.getGrouping()) {
+                smw.put(kd, entry.getValue());
+            }
+        }
+
+        return smw;
     }
 
     /**
@@ -121,6 +166,22 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
      */
     public void addHadoopValue(String label, WritableComparable<?> writable) {
         addHadoopValue(label, writable, true, Record.SORT_NON, 0);
+    }
+
+    /**
+     * Returns if true, values is nothing.
+     * @return If true, values is nothing
+     */
+    public boolean isEmpty() {
+        return writableMap.isEmpty();
+    }
+
+    public boolean isGroupingEmpty() {
+        return getGrouping().isEmpty();
+    }
+
+    public boolean isSortEmpty() {
+        return getSort().isEmpty();
     }
 
     /**

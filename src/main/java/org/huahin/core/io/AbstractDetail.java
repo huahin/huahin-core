@@ -35,6 +35,13 @@ public abstract class AbstractDetail<T> implements Detail<T> {
     }
 
     /**
+     * @param order new order
+     */
+    public void setOrder(int order) {
+        this.order.set(order);
+    }
+
+    /**
      * {@inheritDoc}
      */
     public String getLabel() {
