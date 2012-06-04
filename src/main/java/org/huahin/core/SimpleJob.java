@@ -111,6 +111,28 @@ public class SimpleJob extends Job {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("rawtypes")
+    @Override
+    public void setMapperClass(Class<? extends Mapper> cls)
+            throws IllegalStateException {
+        super.setMapperClass(cls);
+        mapper = true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("rawtypes")
+    @Override
+    public void setReducerClass(Class<? extends Reducer> cls)
+            throws IllegalStateException {
+        super.setReducerClass(cls);
+        reducer = true;
+    }
+
+    /**
      * Whether to ignore the format.
      * @param formatIgnored Whether to ignore the format
      */

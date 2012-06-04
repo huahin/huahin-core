@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -123,9 +124,9 @@ public abstract class SimpleJobTool extends Configured implements Tool {
         // Make the intermediate path
         if (autoIntermediatePath) {
             int stepNo = 1;
-            SimpleJob lastJob = null;
+            Job lastJob = null;
             String lastIntermediatePath = null;
-            for (SimpleJob j : sequencalJobChain.getJobs()) {
+            for (Job j : sequencalJobChain.getJobs()) {
                 if (lastJob == null) {
                     TextInputFormat.setInputPaths(j, input);
                     j.setInputFormatClass(TextInputFormat.class);
@@ -144,9 +145,12 @@ public abstract class SimpleJobTool extends Configured implements Tool {
                 lastJob = j;
             }
 
-            for (SimpleJob j : sequencalJobChain.getJobs()) {
-                if (!j.isReducer()) {
-                    j.setNumReduceTasks(0);
+            for (Job j : sequencalJobChain.getJobs()) {
+                if (j instanceof SimpleJob) {
+                    SimpleJob jj = (SimpleJob) j;
+                    if (!jj.isReducer()) {
+                        jj.setNumReduceTasks(0);
+                    }
                 }
             }
 

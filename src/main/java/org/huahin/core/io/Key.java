@@ -17,8 +17,6 @@
  */
 package org.huahin.core.io;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.io.IntWritable;
@@ -109,6 +107,23 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
         return smw;
     }
 
+    /**
+     * set new sort
+     * @param smw sort
+     */
+    @SuppressWarnings("rawtypes")
+    public void setSort(SortedMapWritable smw) {
+        for (Entry<WritableComparable, Writable> entry : smw.entrySet()) {
+            KeyDetail kd = (KeyDetail) entry.getKey();
+            kd.setOrder(++order);
+            writableMap.put(kd, entry.getValue());
+        }
+    }
+
+    /**
+     * Returns a value that is used for sort
+     * @return sort
+     */
     @SuppressWarnings("rawtypes")
     public SortedMapWritable getSort() {
         SortedMapWritable smw = new SortedMapWritable();
@@ -122,31 +137,22 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
         return smw;
     }
 
+    /**
+     * set new grouping
+     * @param smw grouping
+     */
     @SuppressWarnings("rawtypes")
-    public void setSort(SortedMapWritable smw) {
+    public void setGrouping(SortedMapWritable smw) {
         for (Entry<WritableComparable, Writable> entry : smw.entrySet()) {
             KeyDetail kd = (KeyDetail) entry.getKey();
-            kd.setOrder(++order);
-            writableMap.put(kd, entry.getValue());
+            addHadoopValue(kd.getLabel(), (WritableComparable<?>) entry.getValue());
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    public void clearSort() {
-        List<KeyDetail> removes = new ArrayList<KeyDetail>();
-        for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
-            KeyDetail kd = (KeyDetail) entry.getKey();
-            if (kd.getSort() != Record.SORT_NON) {
-                removes.add(kd);
-            }
-        }
-
-        for (KeyDetail kd : removes) {
-            order--;
-            writableMap.remove(kd);
-        }
-    }
-
+    /**
+     * Returns a value that is used for grouping
+     * @return grouping
+     */
     @SuppressWarnings("rawtypes")
     public SortedMapWritable getGrouping() {
         SortedMapWritable smw = new SortedMapWritable();
@@ -176,10 +182,18 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
         return writableMap.isEmpty();
     }
 
+    /**
+     * Returns if true, grouping is nothing.
+     * @return If true, grouping is nothing
+     */
     public boolean isGroupingEmpty() {
         return getGrouping().isEmpty();
     }
 
+    /**
+     * Returns if true, sort is nothing.
+     * @return If true, sort is nothing
+     */
     public boolean isSortEmpty() {
         return getSort().isEmpty();
     }

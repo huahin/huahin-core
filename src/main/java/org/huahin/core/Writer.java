@@ -47,9 +47,7 @@ public class Writer {
         } else {
             if (record.getKey().isGroupingEmpty() &&
                 !record.getKey().isSortEmpty()) {
-                defaultRecord.getKey().clearSort();
-                defaultRecord.getKey().setSort(record.getKey().getSort());
-                record.setKey(defaultRecord.getKey());
+                record.getKey().setGrouping(defaultRecord.getKey().getGrouping());
             }
         }
 

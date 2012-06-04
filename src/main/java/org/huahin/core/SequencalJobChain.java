@@ -27,13 +27,13 @@ import org.apache.hadoop.mapreduce.Job;
  * Run all of the job has been added.
  */
 public class SequencalJobChain {
-    private List<SimpleJob> jobs = new ArrayList<SimpleJob>();
+    private List<Job> jobs = new ArrayList<Job>();
 
     /**
      * Add job
      * @param job
      */
-    public void add(SimpleJob job) {
+    public void add(Job job) {
         this.jobs.add(job);
     }
 
@@ -41,7 +41,7 @@ public class SequencalJobChain {
      * Add jobs
      * @param jobs
      */
-    public void add(SimpleJob... jobs) {
+    public void add(Job... jobs) {
         this.jobs.addAll(Arrays.asList(jobs));
     }
 
@@ -57,7 +57,7 @@ public class SequencalJobChain {
      * Returns jobs list
      * @return jobs list
      */
-    public List<SimpleJob> getJobs() {
+    public List<Job> getJobs() {
         return jobs;
     }
 
