@@ -127,7 +127,7 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
     }
 
     /**
-     * Will be called before each summarizer is called.
+     * Will be called for each group.
      */
     public abstract void init();
 
