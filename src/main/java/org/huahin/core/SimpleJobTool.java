@@ -38,7 +38,7 @@ import org.huahin.core.util.StringUtil;
  * Job tool class is to set the Job.
  *
  * <p>To configure the Job, you will create a tool that inherit from this class.
- * Done to create and delete the intermediate file path by default.</p>
+ * By default, the intermediate file path creation and deletion is done automatically.</p>
  *
  * <p>If you want to perform more advanced configuration, you can also edit the parameters directly.</p>
  *
