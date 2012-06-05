@@ -67,7 +67,7 @@ import org.huahin.core.util.StringUtil;
  * @see Summarizer
  */
 public abstract class Filter extends Mapper<Writable, Writable, Key, Value> {
-    private Context context;
+    protected Context context;
     private Writer writer = new Writer();
     private String[] labels;
     private String separator;
