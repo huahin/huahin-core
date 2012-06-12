@@ -66,23 +66,19 @@ Filter#fileterSetup method is called once at the beginning of the task.
 
 Source Code: PathSummarizer.java
 public class PathSummarizer extends Summarizer {
-    private int pv;
-
     @Override
     public void init() {
-        pv = 0;
     }
 
     @Override
-    public boolean summarizer(Record record, Writer writer)
+    public void summarizer(Writer writer)
             throws IOException, InterruptedException {
-        pv++;
-        return false;
-    }
+        int pv = 0;
+        while (hasNext()) {
+          next(writer);
+          pv++;
+        }
 
-    @Override
-    public void end(Record record, Writer writer)
-            throws IOException, InterruptedException {
         Record emitRecord = new Record();
         emitRecord.addValue("PV", pv);
         writer.write(emitRecord);
@@ -94,18 +90,15 @@ public class PathSummarizer extends Summarizer {
 }
 
 Summarizer is an abstract class change to Reducer. Summarizer class is processed by summarizer method.
+Call the Summarizer#next method in Summarizer, to get the Record.
+The end of the Record decision, use the Summarizer#hasNext method.
+This specification is similar to the iterator of Java.
+
 Record the parameters of the summarizer method will contain the Value and Key.
 To get the value specifies the type and label. Writer is used to write the Record.
-If the return value is true, end method is called summarizer is terminated.
-If false, will be called as long as records exist.
-
 Record using the Writer to write, you specify groups, values, and the sort.
 
-Summarizer#end method is called when a summarizer has been completed.
-In the example, count the pv in the summarizer method, and then output the results in the end method.
-
 Summarizer#init method is called for each group.
-In the example, initialize the pv for each group.
 
 Summarizer#summarizerSetup method is called once at the beginning of the task.
 
@@ -126,9 +119,9 @@ public class PathPVJobTool extends SimpleJobTool {
     protected void setup() throws Exception {
         final String[] labels = new String[] { "USER", "DATE", "REFERER", "URL" };
 
-        SimpleJob job1 = addJob(labels, StringUtil.TAB);
-        job1.setFilter(PathFileter.class);
-        job1.setSummaizer(PathSummarizer.class);
+        SimpleJob job = addJob(labels, StringUtil.TAB);
+        job.setFilter(PathFileter.class);
+        job.setSummaizer(PathSummarizer.class);
     }
 }
 

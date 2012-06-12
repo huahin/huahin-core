@@ -18,6 +18,7 @@
 package org.huahin.core;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 import org.apache.hadoop.mapreduce.Reducer;
 import org.huahin.core.io.Key;
@@ -29,28 +30,25 @@ import org.huahin.core.io.Record;
  * <code>Summarizer</code> will process a given record from {@link Filter}.
  *
  * <p>The framework first calls {@link #summarizerSetup()}, followed by
- * {@link #init()} and {@link #summarizer(Record, Writer)} for each {@link Record} in the input.</p>
+ * {@link #init()} and {@link #summarizer(Writer)} for each {@link Record} in the input.</p>
  *
  * <p>The following is an example to do a count of the WORD that was passed from Filter.
- * Does not specify the Grouping in the end(), which is used by default.</p>
+ * Has not specified grouping, will use the default.</p>
  *
  * <p>Example:</p>
  * <p><blockquote><pre>
  * public class WordSummarizer extends Summarizer {
- *   private int count;
- *
  *   public void init() {
- *     count = 0;
  *   }
  *
- *   public boolean summarizer(Record record, Writer writer)
+ *   public void summarizer(Writer writer)
  *       throws IOException, InterruptedException {
- *     count++;
- *     return false;
- *   }
+ *     int count = 0;
+ *     while (hasNext()) {
+ *       next(writer);
+ *       count++;
+ *     }
  *
- *   public void end(Record record, Writer writer)
- *       throws IOException, InterruptedException {
  *     Record emitRecord = new Record();
  *     emitRecord.addValue("COUNT", count);
  *     writer.write(emitRecord);
@@ -68,6 +66,8 @@ import org.huahin.core.io.Record;
 public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
     protected Context context;
     private Writer writer = new Writer();
+    private Iterator<Value> recordIte;
+    private Key currentKey;
 
     /**
      * {@inheritDoc}
@@ -77,17 +77,9 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
         writer.setContext(context);
         init();
 
-        for (Value value : values) {
-            Record record = new Record(key, value);
-            writer.setDefaultRecord(record);
-            if (summarizer(record, writer)) {
-                break;
-            }
-        }
-
-        Record v = new Record(key, new Value());
-        writer.setDefaultRecord(v);
-        end(v, writer);
+        currentKey = key;
+        recordIte = values.iterator();
+        summarizer(writer);
     }
 
     /**
@@ -97,6 +89,35 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
             throws IOException ,InterruptedException {
         this.context = context;
         summarizerSetup();
+    }
+
+    /**
+     * Returns true if the iteration has more {@link Record}.
+     * @return true if the iterator has more {@link Record}.
+     */
+    protected boolean hasNext() {
+        return recordIte.hasNext();
+    }
+
+    /**
+     * Returns the next {@link Record} in the iteration.
+     * @param writer the output using the writer.
+     * @return the next {@link Record} in the iteration.
+     */
+    protected Record next(Writer writer) {
+        Record record = new Record(currentKey, recordIte.next());
+        writer.setDefaultRecord(record);
+        return record;
+    }
+
+    /**
+     * This method is returns the record for get the grouping.
+     * @return grouping record
+     */
+    protected Record getGroupingRecord() {
+        Record record = new Record();
+        record.setKey(currentKey);
+        return record;
     }
 
     /**
@@ -133,23 +154,11 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
 
     /**
      * <code>summarizer</code> will process a given record from {@link Filter}.
-     * @param record input record
-     * @param writer the output using the writer.
-     * @return If you return true, and exit the summarizer.
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    public abstract boolean summarizer(Record record, Writer writer) throws IOException ,InterruptedException;
-
-    /**
-     * end will be executed after the summarizer has been completed.<br>
-     * Run the final result were treated with summarizer. But it is not required.
-     * @param record last input record
      * @param writer the output using the writer.
      * @throws IOException
      * @throws InterruptedException
      */
-    public abstract void end(Record record, Writer writer) throws IOException ,InterruptedException;
+    public abstract void summarizer(Writer writer) throws IOException ,InterruptedException;
 
     /**
      * Called once at the beginning of the task.
