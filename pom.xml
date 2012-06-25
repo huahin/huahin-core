@@ -35,6 +35,24 @@
     </license>
   </licenses>
 
+  <scm>
+    <url>https://github.com/huahin/huahin-core</url>
+    <connection>scm:git:git://github.com/huahin/huahin-core.git</connection>
+    <developerConnection>
+      scm:git:git://github.com/huahin/huahin-core.git
+    </developerConnection>
+  </scm>
+
+  <mailingLists>
+    <mailingList>
+      <name>Huahin Framework</name>
+      <subscribe>huahin-framework-subscribe@googlegroups.com</subscribe>
+      <unsubscribe>huahin-framework-unsubscribe@googlegroups.com</unsubscribe>
+      <post>huahin-framework@googlegroups.com</post>
+      <archive>http://groups.google.com/group/huahin-framework</archive>
+    </mailingList>
+  </mailingLists>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
