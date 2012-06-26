@@ -19,14 +19,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.huahin</groupId>
+  <groupId>org.huahinframework</groupId>
   <artifactId>huahin-core</artifactId>
   <version>0.1.0</version>
   <packaging>jar</packaging>
   <description>Simple Java framework for Hadoop MapReduce</description>
 
   <name>huahin-core</name>
-  <url>http://huahin.github.com/huahin-core/</url>
+  <url>http://huahinframework.org/huahin-core/</url>
 
   <licenses>
     <license>
