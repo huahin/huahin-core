@@ -36,9 +36,9 @@
   </licenses>
 
   <scm>
-    <url>scm:git:git@github.com:huahin/huahin-core.git</url>
-    <connection>scm:git:git://github.com/huahin/huahin-core.git</connection>
-    <developerConnection>scm:git:git://github.com/huahin/huahin-core.git</developerConnection>
+    <url>http://github.com/huahin/huahin-core</url>
+    <connection>scm:git:git@github.com:huahin/huahin-core.git</connection>
+    <developerConnection>scm:git:git@github.com:huahin/huahin-core.git</developerConnection>
   </scm>
 
   <mailingLists>
