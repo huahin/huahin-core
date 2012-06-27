@@ -36,7 +36,7 @@
   </licenses>
 
   <scm>
-    <url>https://github.com/huahin/huahin-core</url>
+    <url>scm:git:git@github.com:huahin/huahin-core.git</url>
     <connection>scm:git:git://github.com/huahin/huahin-core.git</connection>
     <developerConnection>scm:git:git://github.com/huahin/huahin-core.git</developerConnection>
   </scm>
