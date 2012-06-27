@@ -21,8 +21,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.huahinframework</groupId>
   <artifactId>huahin-core</artifactId>
-  <version>0.1.0</version>
-  <packaging>jar</packaging>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
   <description>Simple Java framework for Hadoop MapReduce</description>
 
   <name>huahin-core</name>
@@ -52,6 +52,51 @@
       <archive>http://groups.google.com/group/huahin-framework</archive>
     </mailingList>
   </mailingLists>
+
+  <distributionManagement>
+    <repository>
+      <id>sonatype-nexus-staging</id>
+      <name>Nexus Release Repository</name>
+      <uniqueVersion>false</uniqueVersion>
+      <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+    <snapshotRepository>
+      <id>org.huahinframework</id>
+      <name>org.huahinframework Repository</name>
+      <uniqueVersion>false</uniqueVersion>
+      <url>file:${user.home}/maven2/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <profiles>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.1</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
