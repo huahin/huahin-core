@@ -21,7 +21,7 @@
   <groupId>org.huahinframework</groupId>
   <artifactId>huahin-core</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
   <description>Simple Java framework for Hadoop MapReduce</description>
 
   <name>huahin-core</name>
