@@ -38,9 +38,7 @@
   <scm>
     <url>https://github.com/huahin/huahin-core</url>
     <connection>scm:git:git://github.com/huahin/huahin-core.git</connection>
-    <developerConnection>
-      scm:git:git://github.com/huahin/huahin-core.git
-    </developerConnection>
+    <developerConnection>scm:git:git://github.com/huahin/huahin-core.git</developerConnection>
   </scm>
 
   <mailingLists>
