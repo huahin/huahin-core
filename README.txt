@@ -17,6 +17,21 @@ Later in this tutorial will introduce sprinkled with a simple example.
 Details or run of MapReduce, please refer to the tutorial of MapReduce.(http://hadoop.apache.org/mapreduce/)
 
 -----------------------------------------------------------------------------
+Install
+
+Gets the jar using maven.
+
+<dependency>
+  <groupId>org.huahinframework</groupId>
+  <artifactId>huahin-core</artifactId>
+  <version>x.x.x</version>
+</dependency>
+
+Or, get the source code.
+
+git clone git://github.com/huahin/huahin-core.git
+
+-----------------------------------------------------------------------------
 Example: URL path page view
 
 This example is intended to summarize the page views of the path from the log of the Web Server.
