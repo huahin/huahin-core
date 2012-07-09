@@ -78,7 +78,7 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
             return "";
         }
 
-        return sb.toString().substring(0, sb.toString().length() - 1);
+        return sb.substring(0, sb.length() - 1);
     }
 
     /**

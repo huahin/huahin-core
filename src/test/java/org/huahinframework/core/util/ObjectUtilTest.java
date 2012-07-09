@@ -39,12 +39,12 @@ import org.huahinframework.core.util.ObjectUtil;
 import org.huahinframework.core.util.PrimitiveObject;
 import org.junit.Test;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
 /**
  *
  */
-public class ObjectUtilTest extends TestCase {
+public class ObjectUtilTest {
     @Test
     public void testPrimitive2HadoopIONull() {
         HadoopObject o = ObjectUtil.primitive2Hadoop(null);

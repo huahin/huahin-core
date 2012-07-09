@@ -68,6 +68,14 @@ public abstract class AbstractWritable implements Writable {
     }
 
     /**
+     * Returns the number of elements in this value.
+     * @return the number of elements in this value
+     */
+    public int size() {
+        return writableMap.size();
+    }
+
+    /**
      * @param label target label
      * @return The {@link Writable} value of the label. If it is not null.
      */

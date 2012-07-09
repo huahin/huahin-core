@@ -145,6 +145,22 @@ public class Record {
     }
 
     /**
+     * Returns the number of elements in this Key.
+     * @return the number of elements in this Key
+     */
+    public int sizeKey() {
+        return key.size();
+    }
+
+    /**
+     * Returns the number of elements in this Value.
+     * @return the number of elements in this Value
+     */
+    public int sizeValue() {
+        return value.size();
+    }
+
+    /**
      * @return the groupingNothing
      */
     public boolean isGroupingNothing() {

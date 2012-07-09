@@ -70,7 +70,12 @@ public class Value extends AbstractWritable {
                 sb.append(w.toString()).append("\t");
             }
         }
-        return sb.toString().substring(0, sb.toString().length() -1);
+
+        if (sb.length() == 0) {
+            return "";
+        }
+
+        return sb.substring(0, sb.length() -1);
     }
 
     /**

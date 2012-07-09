@@ -26,10 +26,10 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
+import org.huahinframework.core.lib.input.SimpleTextInputFormat;
 import org.huahinframework.core.util.HDFSUtils;
 import org.huahinframework.core.util.PathUtils;
 import org.huahinframework.core.util.StringUtil;
@@ -70,10 +70,20 @@ import org.huahinframework.core.util.StringUtil;
  */
 public abstract class SimpleJobTool extends Configured implements Tool {
     private static final String INTERMEDIATE_PATH = "%s-%s-intermediate-%d";
+
+    /**
+     * MapReduce job name
+     */
     protected String jobName;
 
+    /**
+     * Sequencal job chain
+     */
     protected SequencalJobChain sequencalJobChain = new SequencalJobChain();
 
+    /**
+     * {@link Configuration}
+     */
     protected Configuration conf;
 
     /**
@@ -128,8 +138,8 @@ public abstract class SimpleJobTool extends Configured implements Tool {
             String lastIntermediatePath = null;
             for (Job j : sequencalJobChain.getJobs()) {
                 if (lastJob == null) {
-                    TextInputFormat.setInputPaths(j, input);
-                    j.setInputFormatClass(TextInputFormat.class);
+                    SimpleTextInputFormat.setInputPaths(j, input);
+                    j.setInputFormatClass(SimpleTextInputFormat.class);
                 } else {
                     SequenceFileInputFormat.setInputPaths(j, lastIntermediatePath);
                     j.setInputFormatClass(SequenceFileInputFormat.class);
@@ -180,6 +190,15 @@ public abstract class SimpleJobTool extends Configured implements Tool {
     protected abstract String setInputPath(String[] args);
 
     /**
+     * Gets the master path from the argument.
+     * @param args input args
+     * @return master input path
+     */
+    protected String getMasterPath(String[] args) {
+        return null;
+    }
+
+    /**
      * Set the path from the output parameters.
      * @param args output args
      * @return output path
@@ -201,6 +220,15 @@ public abstract class SimpleJobTool extends Configured implements Tool {
     }
 
     /**
+     * @param natural If true is natural MapReduce
+     * @return new {@link SimpleJob} class
+     * @throws IOException
+     */
+    protected SimpleJob addJob(boolean natural) throws IOException {
+        return addJob(new SimpleJob(natural, conf, jobName), null, null, false);
+    }
+
+    /**
      * @param labels label of input data
      * @param separator separator of data
      * @return new {@link SimpleJob} class
@@ -208,6 +236,15 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      */
     protected SimpleJob addJob(String[] labels, String separator) throws IOException {
         return addJob(new SimpleJob(conf, jobName), labels, separator, false);
+    }
+
+    /**
+     * @param separator separator of data
+     * @return new {@link SimpleJob} class
+     * @throws IOException
+     */
+    protected SimpleJob addJob(String separator) throws IOException {
+        return addJob(new SimpleJob(conf, jobName), null, separator, false);
     }
 
     /**
@@ -233,14 +270,17 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      * @return new {@link SimpleJob} class
      * @throws IOException
      */
-    protected SimpleJob addJob(SimpleJob job, String[] labels, String separator, boolean formatIgnored) throws IOException {
+    protected SimpleJob addJob(SimpleJob job, String[] labels,
+                               String separator, boolean formatIgnored) throws IOException {
         if (labels != null) {
             job.getConfiguration().setStrings(SimpleJob.LABELS, labels);
+        }
+
+        if (separator != null) {
             job.getConfiguration().set(SimpleJob.SEPARATOR, separator);
         }
 
         job.setJarByClass(SimpleJobTool.class);
-        job.setFirst(sequencalJobChain.isEmpty());
         job.setFormatIgnored(formatIgnored);
         sequencalJobChain.add(job);
         // TODO: How to do Reduce task.

@@ -19,14 +19,10 @@ package org.huahinframework.core;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.huahinframework.core.io.Key;
 import org.huahinframework.core.io.Record;
 import org.huahinframework.core.io.Value;
-import org.huahinframework.core.util.StringUtil;
 
 /**
  * This class is wrapping the {@link Mapper} class.
@@ -66,47 +62,21 @@ import org.huahinframework.core.util.StringUtil;
  * @see Writer
  * @see Summarizer
  */
-public abstract class Filter extends Mapper<Writable, Writable, Key, Value> {
+public abstract class Filter extends Mapper<Key, Value, Key, Value> {
     protected Context context;
     private Writer writer = new Writer();
-    private String[] labels;
-    private String separator;
-    private boolean first;
-    private boolean formatIgnored;
 
     /**
      * {@inheritDoc}
      */
-    public void map(Writable key, Writable value, Context context)
+    public void map(Key key, Value value, Context context)
             throws IOException,InterruptedException {
         writer.setContext(context);
         init();
 
         Record record = new Record();
-        if (first) {
-            LongWritable k = (LongWritable) key;
-            Text v = (Text) value;
-
-            record.addGrouping("KEY", k.get());
-
-            String[] strings = StringUtil.split(v.toString(), separator, false);
-            if (labels.length != strings.length) {
-                if (formatIgnored) {
-                    throw new DataFormatException("input format error: " +
-                                                  "label.length = " + labels.length +
-                                                  "input.lenght = " + strings.length);
-                }
-
-                return;
-            }
-
-            for (int i = 0; i < strings.length; i++) {
-                record.addValue(labels[i], strings[i]);
-            }
-        } else {
-            record.setKey((Key) key);
-            record.setValue((Value) value);
-        }
+        record.setKey(key);
+        record.setValue(value);
 
         writer.setDefaultRecord(record);
         filter(record, writer);
@@ -118,10 +88,6 @@ public abstract class Filter extends Mapper<Writable, Writable, Key, Value> {
     public void setup(Context context)
             throws IOException ,InterruptedException {
         this.context = context;
-        first = context.getConfiguration().getBoolean(SimpleJob.FIRST, false);
-        formatIgnored = context.getConfiguration().getBoolean(SimpleJob.FORMAT_IGNORED, false);
-        labels = context.getConfiguration().getStrings(SimpleJob.LABELS);
-        separator = context.getConfiguration().get(SimpleJob.SEPARATOR, StringUtil.COMMA);
         filterSetup();
     }
 
