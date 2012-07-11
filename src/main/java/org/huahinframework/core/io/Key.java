@@ -68,8 +68,8 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
-            KeyDetail kd = (KeyDetail) entry.getKey();
-            if (kd.getGrouping()) {
+            AbstractDetail detail = (AbstractDetail) entry.getKey();
+            if (detail instanceof GroupingDetail) {
                 sb.append(entry.getValue().toString()).append(StringUtil.TAB);
             }
         }
@@ -97,10 +97,11 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
     public SortedMapWritable sort() {
         SortedMapWritable smw = new SortedMapWritable();
         for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
-            KeyDetail kd = (KeyDetail) entry.getKey();
-            if (kd.getSort() != Record.SORT_NON) {
-                kd.setKey((WritableComparable) entry.getValue());
-                smw.put(new IntWritable(kd.getSortPriority()), kd);
+            AbstractDetail detail = (AbstractDetail) entry.getKey();
+            if (detail instanceof SortDetail) {
+                SortDetail sd = (SortDetail) detail;
+                sd.setKey((WritableComparable) entry.getValue());
+                smw.put(new IntWritable(sd.getSortPriority()), sd);
             }
         }
 
@@ -114,9 +115,8 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
     @SuppressWarnings("rawtypes")
     public void setSort(SortedMapWritable smw) {
         for (Entry<WritableComparable, Writable> entry : smw.entrySet()) {
-            KeyDetail kd = (KeyDetail) entry.getKey();
-            kd.setOrder(++order);
-            writableMap.put(kd, entry.getValue());
+            AbstractDetail detail = (AbstractDetail) entry.getKey();
+            writableMap.put(detail, entry.getValue());
         }
     }
 
@@ -128,9 +128,9 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
     public SortedMapWritable getSort() {
         SortedMapWritable smw = new SortedMapWritable();
         for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
-            KeyDetail kd = (KeyDetail) entry.getKey();
-            if (kd.getSort() != Record.SORT_NON) {
-                smw.put(kd, entry.getValue());
+            AbstractDetail detail = (AbstractDetail) entry.getKey();
+            if (detail instanceof SortDetail) {
+                smw.put(detail, entry.getValue());
             }
         }
 
@@ -144,8 +144,8 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
     @SuppressWarnings("rawtypes")
     public void setGrouping(SortedMapWritable smw) {
         for (Entry<WritableComparable, Writable> entry : smw.entrySet()) {
-            KeyDetail kd = (KeyDetail) entry.getKey();
-            addHadoopValue(kd.getLabel(), (WritableComparable<?>) entry.getValue());
+            AbstractDetail detail = (AbstractDetail) entry.getKey();
+            addHadoopValue(detail.getLabel(), (WritableComparable<?>) entry.getValue());
         }
     }
 
@@ -157,9 +157,9 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
     public SortedMapWritable getGrouping() {
         SortedMapWritable smw = new SortedMapWritable();
         for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
-            KeyDetail kd = (KeyDetail) entry.getKey();
-            if (kd.getGrouping()) {
-                smw.put(kd, entry.getValue());
+            AbstractDetail detail = (AbstractDetail) entry.getKey();
+            if (detail instanceof GroupingDetail) {
+                smw.put(detail, entry.getValue());
             }
         }
 
@@ -209,7 +209,9 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
             writable = NullWritable.get();
         }
 
-        writableMap.put(new KeyDetail(++order, label, false, sort, sortPriority), writable);
+        if (sort != Record.SORT_NON) {
+            writableMap.put(new SortDetail(sort, sortPriority), writable);
+        }
     }
 
     /**
@@ -224,7 +226,11 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
             writable = NullWritable.get();
         }
 
-        writableMap.put(new KeyDetail(++order, label, grouping, sort, sortPriority), writable);
+        if (grouping) {
+            writableMap.put(new GroupingDetail(++order, label), writable);
+        } else if (sort != Record.SORT_NON) {
+            writableMap.put(new SortDetail(sort, sortPriority), writable);
+        }
     }
 
     /**
@@ -244,7 +250,9 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
     public void addPrimitiveValue(String label, Object object, int sort, int sortPriority) {
         HadoopObject ho = ObjectUtil.primitive2Hadoop(object);
         if (ho.getObject() instanceof WritableComparable) {
-            writableMap.put(new KeyDetail(++order, label, false, sort, sortPriority), ho.getObject());
+            if (sort != Record.SORT_NON) {
+                writableMap.put(new SortDetail(sort, sortPriority), ho.getObject());
+            }
             return;
         }
 
@@ -261,7 +269,11 @@ public class Key extends AbstractWritable implements WritableComparable<Key> {
     public void addPrimitiveValue(String label, Object object, boolean grouping, int sort, int sortPriority) {
         HadoopObject ho = ObjectUtil.primitive2Hadoop(object);
         if (ho.getObject() instanceof WritableComparable) {
-            writableMap.put(new KeyDetail(++order, label, grouping, sort, sortPriority), ho.getObject());
+            if (grouping) {
+                writableMap.put(new GroupingDetail(++order, label), ho.getObject());
+            } else if (sort != Record.SORT_NON) {
+                writableMap.put(new SortDetail(sort, sortPriority), ho.getObject());
+            }
             return;
         }
 

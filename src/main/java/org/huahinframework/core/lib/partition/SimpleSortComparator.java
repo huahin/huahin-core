@@ -25,8 +25,8 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 import org.huahinframework.core.io.Key;
-import org.huahinframework.core.io.KeyDetail;
 import org.huahinframework.core.io.Record;
+import org.huahinframework.core.io.SortDetail;
 import org.huahinframework.core.util.ObjectUtil;
 
 /**
@@ -63,8 +63,8 @@ public class SimpleSortComparator extends WritableComparator {
 
             for (Entry<WritableComparable, Writable> entry : oneSort.entrySet()) {
                 IntWritable priority = ((IntWritable) entry.getKey());
-                KeyDetail oneKeyDetail = (KeyDetail) entry.getValue();
-                KeyDetail otherKeyDetail = (KeyDetail) otherSort.get(priority);
+                SortDetail oneKeyDetail = (SortDetail) entry.getValue();
+                SortDetail otherKeyDetail = (SortDetail) otherSort.get(priority);
 
                 WritableComparable oneKey = oneKeyDetail.getKey();
                 WritableComparable otherKey = otherKeyDetail.getKey();

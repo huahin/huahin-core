@@ -21,15 +21,13 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.WritableComparable;
 
 /**
- * This class will do the detail settings of the Key.
+ *
  */
-public class KeyDetail extends AbstractDetail<KeyDetail> {
-    private BooleanWritable grouping = new BooleanWritable();
+public class SortDetail extends AbstractDetail<SortDetail> {
     private IntWritable sort = new IntWritable();
     private IntWritable sortPriority = new IntWritable();
 
@@ -39,20 +37,14 @@ public class KeyDetail extends AbstractDetail<KeyDetail> {
     /**
      * Default constractor
      */
-    public KeyDetail() {
+    public SortDetail() {
     }
 
     /**
-     * @param order value order
-     * @param label value's label
-     * @param grouping If true, set the grouping
      * @param sort If true, set the sort
      * @param sortPriority the sort order
      */
-    public KeyDetail(int order, String label, boolean grouping, int sort, int sortPriority) {
-        this.order.set(order);
-        this.label.set(label);
-        this.grouping.set(grouping);
+    public SortDetail(int sort, int sortPriority) {
         this.sort.set(sort);
         this.sortPriority.set(sortPriority);
     }
@@ -62,9 +54,6 @@ public class KeyDetail extends AbstractDetail<KeyDetail> {
      */
     @Override
     public void readFields(DataInput in) throws IOException {
-        this.order.readFields(in);
-        this.label.readFields(in);
-        this.grouping.readFields(in);
         this.sort.readFields(in);
         this.sortPriority.readFields(in);
     }
@@ -74,9 +63,6 @@ public class KeyDetail extends AbstractDetail<KeyDetail> {
      */
     @Override
     public void write(DataOutput out) throws IOException {
-        this.order.write(out);
-        this.label.write(out);
-        this.grouping.write(out);
         this.sort.write(out);
         this.sortPriority.write(out);
     }
@@ -85,15 +71,8 @@ public class KeyDetail extends AbstractDetail<KeyDetail> {
      * {@inheritDoc}
      */
     @Override
-    public int compareTo(KeyDetail o) {
-        return order.compareTo(o.order);
-    }
-
-    /**
-     * @return the grouping
-     */
-    public boolean getGrouping() {
-        return grouping.get();
+    public int compareTo(SortDetail o) {
+        return sortPriority.compareTo(o.sortPriority);
     }
 
     /**
@@ -131,6 +110,6 @@ public class KeyDetail extends AbstractDetail<KeyDetail> {
      */
     @Override
     public String toString() {
-        return order + "\t" + label + "\t" + grouping + "\t" + sort + "\t" + sortPriority;
+        return sort + "\t" + sortPriority;
     }
 }

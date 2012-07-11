@@ -37,9 +37,9 @@ public class SimpleJob extends Job {
     public static final String SEPARATOR = "SEPARATOR";
     public static final String FORMAT_IGNORED = "FORMAT_IGNORED";
 
+    private boolean natural = false;
     private boolean mapper = false;
     private boolean reducer = false;
-
 
     /**
      * @throws IOException
@@ -77,6 +77,7 @@ public class SimpleJob extends Job {
     public SimpleJob(boolean natural, Configuration conf, String jobName) throws IOException {
         super(conf, jobName);
         if (natural) {
+            this.natural = natural;
             super.setMapperClass(Mapper.class);
             super.setReducerClass(Reducer.class);
         } else {
@@ -178,6 +179,14 @@ public class SimpleJob extends Job {
      */
     public void setParameter(String name, int value) {
         conf.setInt(name, value);
+    }
+
+    /**
+     * Returns if true, set the natural
+     * @return the natural If true, set the natural
+     */
+    public boolean isNatural() {
+        return natural;
     }
 
     /**

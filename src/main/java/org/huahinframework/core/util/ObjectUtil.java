@@ -24,17 +24,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.hadoop.io.AbstractMapWritable;
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.ByteWritable;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.MD5Hash;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.ObjectWritable;
+import org.apache.hadoop.io.SortedMapWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.TwoDArrayWritable;
+import org.apache.hadoop.io.VIntWritable;
+import org.apache.hadoop.io.VLongWritable;
 import org.apache.hadoop.io.Writable;
 
 /**
@@ -91,9 +100,42 @@ public class ObjectUtil {
      */
     public static final int MAP = 32;
 
+    private static final Map<Class<?>, Byte> classToIdMap = new ConcurrentHashMap<Class<?>, Byte>();
+    private static final Map<Byte, Class<?>> idToClassMap = new ConcurrentHashMap<Byte, Class<?>>();
     public static final Map<Integer, Class<? extends Writable>> hadoopObjectMap = new HashMap<Integer, Class<? extends Writable>>();
     public static final Map<Integer, Class<?>> primitiveObjectMap = new HashMap<Integer, Class<?>>();
     static {
+        addToIdMap(ArrayWritable.class,
+                Byte.valueOf(Integer.valueOf(-127).byteValue()));
+        addToIdMap(BooleanWritable.class,
+                Byte.valueOf(Integer.valueOf(-126).byteValue()));
+        addToIdMap(BytesWritable.class,
+                Byte.valueOf(Integer.valueOf(-125).byteValue()));
+        addToIdMap(FloatWritable.class,
+                Byte.valueOf(Integer.valueOf(-124).byteValue()));
+        addToIdMap(IntWritable.class,
+                Byte.valueOf(Integer.valueOf(-123).byteValue()));
+        addToIdMap(LongWritable.class,
+                Byte.valueOf(Integer.valueOf(-122).byteValue()));
+        addToIdMap(MapWritable.class,
+                Byte.valueOf(Integer.valueOf(-121).byteValue()));
+        addToIdMap(MD5Hash.class,
+                Byte.valueOf(Integer.valueOf(-120).byteValue()));
+        addToIdMap(NullWritable.class,
+                Byte.valueOf(Integer.valueOf(-119).byteValue()));
+        addToIdMap(ObjectWritable.class,
+                Byte.valueOf(Integer.valueOf(-118).byteValue()));
+        addToIdMap(SortedMapWritable.class,
+                Byte.valueOf(Integer.valueOf(-117).byteValue()));
+        addToIdMap(Text.class,
+                Byte.valueOf(Integer.valueOf(-116).byteValue()));
+        addToIdMap(TwoDArrayWritable.class,
+                Byte.valueOf(Integer.valueOf(-115).byteValue()));
+        addToIdMap(VIntWritable.class,
+                Byte.valueOf(Integer.valueOf(-114).byteValue()));
+        addToIdMap(VLongWritable.class,
+                Byte.valueOf(Integer.valueOf(-113).byteValue()));
+
         hadoopObjectMap.put(NULL, NullWritable.class);
         hadoopObjectMap.put(STRING, Text.class);
         hadoopObjectMap.put(BYTE, ByteWritable.class);
@@ -102,6 +144,8 @@ public class ObjectUtil {
         hadoopObjectMap.put(DOUBLE, DoubleWritable.class);
         hadoopObjectMap.put(FLOAT, FloatWritable.class);
         hadoopObjectMap.put(BOOLEAN, BooleanWritable.class);
+        hadoopObjectMap.put(ARRAY, ArrayWritable.class);
+        hadoopObjectMap.put(MAP, AbstractMapWritable.class);
 
         primitiveObjectMap.put(STRING, String.class);
         primitiveObjectMap.put(BYTE, Byte.class);
@@ -110,6 +154,29 @@ public class ObjectUtil {
         primitiveObjectMap.put(DOUBLE, Double.class);
         primitiveObjectMap.put(FLOAT, Float.class);
         primitiveObjectMap.put(BOOLEAN, Boolean.class);
+    }
+
+    /**
+     * @param clazz
+     * @param id
+     */
+    private static void addToIdMap(Class<?> clazz, byte id) {
+        classToIdMap.put(clazz, id);
+        idToClassMap.put(id, clazz);
+    }
+
+    /**
+     * @return the Class class for the specified id
+     */
+    public static Class<?> getClass(byte id) {
+      return idToClassMap.get(id);
+    }
+
+    /**
+     * @return the id for the specified Class
+     */
+    public static byte getId(Class<?> clazz) {
+      return classToIdMap.containsKey(clazz) ? classToIdMap.get(clazz) : -1;
     }
 
     /**
@@ -226,7 +293,7 @@ public class ObjectUtil {
         } else if (object instanceof MapWritable) {
             MapWritable mw = (MapWritable) object;
             if (mw.size() == 0) {
-                return new PrimitiveObject(ARRAY, true, STRING, STRING, new HashMap<String, String>());
+                return new PrimitiveObject(MAP, true, STRING, STRING, new HashMap<String, String>());
             }
 
             int keyType = NULL;

@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
@@ -138,8 +139,19 @@ public abstract class SimpleJobTool extends Configured implements Tool {
             String lastIntermediatePath = null;
             for (Job j : sequencalJobChain.getJobs()) {
                 if (lastJob == null) {
-                    SimpleTextInputFormat.setInputPaths(j, input);
-                    j.setInputFormatClass(SimpleTextInputFormat.class);
+                    if (j instanceof SimpleJob) {
+                        SimpleJob sj = (SimpleJob) j;
+                        if (sj.isNatural()) {
+                            TextInputFormat.setInputPaths(j, input);
+                            j.setInputFormatClass(TextInputFormat.class);
+                        } else {
+                            SimpleTextInputFormat.setInputPaths(j, input);
+                            j.setInputFormatClass(SimpleTextInputFormat.class);
+                        }
+                    } else {
+                        TextInputFormat.setInputPaths(j, input);
+                        j.setInputFormatClass(TextInputFormat.class);
+                    }
                 } else {
                     SequenceFileInputFormat.setInputPaths(j, lastIntermediatePath);
                     j.setInputFormatClass(SequenceFileInputFormat.class);
