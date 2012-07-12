@@ -20,28 +20,38 @@ package org.huahinframework.core.io;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.hadoop.io.SortedMapWritable;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
 import org.huahinframework.core.util.HadoopObject;
 import org.huahinframework.core.util.ObjectUtil;
 import org.huahinframework.core.util.PrimitiveObject;
+import org.huahinframework.core.util.StringUtil;
 
 /**
- * This abstract class is a class that holds the value.
+ * This Writable is Writable class of basic.
  */
-public abstract class AbstractWritable implements Writable {
-    protected int order = 0;
-    protected SortedMapWritable writableMap = new SortedMapWritable();
+public class BasicWritable implements Writable {
+    protected List<ValueWritable> values = new ArrayList<ValueWritable>();
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void readFields(DataInput in) throws IOException {
-        writableMap.readFields(in);
+        try {
+            values.clear();
+            int entries = in.readInt();
+            for (int i = 0; i < entries; i++) {
+                ValueWritable vw = new ValueWritable();
+                vw.readFields(in);
+                values.add(vw);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -49,7 +59,10 @@ public abstract class AbstractWritable implements Writable {
      */
     @Override
     public void write(DataOutput out) throws IOException {
-        writableMap.write(out);
+        out.writeInt(values.size());
+        for (ValueWritable vw : values) {
+            vw.write(out);
+        }
     }
 
     /**
@@ -64,7 +77,15 @@ public abstract class AbstractWritable implements Writable {
      * Clearing the retention value
      */
     public void clear() {
-        writableMap.clear();
+        values.clear();
+    }
+
+    /**
+     * Returns if true, values is nothing.
+     * @return If true, values is nothing
+     */
+    public boolean isEmpty() {
+        return values.isEmpty();
     }
 
     /**
@@ -72,19 +93,17 @@ public abstract class AbstractWritable implements Writable {
      * @return the number of elements in this value
      */
     public int size() {
-        return writableMap.size();
+        return values.size();
     }
 
     /**
      * @param label target label
      * @return The {@link Writable} value of the label. If it is not null.
      */
-    @SuppressWarnings("rawtypes")
     public Writable getHadoopValue(String label) {
-        for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
-            Detail<?> kd = (Detail<?>) entry.getKey();
-            if (kd.getLabel().equals(label)) {
-                return entry.getValue();
+        for (ValueWritable vw : values) {
+            if (vw.getLabel().toString().equals(label)) {
+                return vw;
             }
         }
 
@@ -95,12 +114,10 @@ public abstract class AbstractWritable implements Writable {
      * @param label target label
      * @return The Java premitive value of the label. If it is not null.
      */
-    @SuppressWarnings("rawtypes")
     public Object getPrimitiveValue(String label) {
-        for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
-            Detail<?> kd = (Detail<?>) entry.getKey();
-            if (kd.getLabel().equals(label)) {
-                return ObjectUtil.hadoop2Primitive(entry.getValue()).getObject();
+        for (ValueWritable vw : values) {
+            if (vw.getLabel().toString().equals(label)) {
+                return ObjectUtil.hadoop2Primitive(vw.getValue()).getObject();
             }
         }
 
@@ -111,14 +128,12 @@ public abstract class AbstractWritable implements Writable {
      * @param label target label
      * @return The {@link HadoopObject} value of the label. If it is not null.
      */
-    @SuppressWarnings("rawtypes")
     public HadoopObject getHadoopObject(String label) {
-        for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
-            Detail<?> kd = (Detail<?>) entry.getKey();
-            if (kd.getLabel().equals(label)) {
+        for (ValueWritable vw : values) {
+            if (vw.getLabel().toString().equals(label)) {
                 HadoopObject ho =
-                        new HadoopObject(ObjectUtil.hadoop2Primitive(entry.getValue()).getType(),
-                                         entry.getValue());
+                        new HadoopObject(ObjectUtil.hadoop2Primitive(vw.getValue()).getType(),
+                                         vw.getValue());
                 return ho;
             }
         }
@@ -130,15 +145,30 @@ public abstract class AbstractWritable implements Writable {
      * @param label target label
      * @return The {@link PrimitiveObject} value of the label. If it is not null.
      */
-    @SuppressWarnings("rawtypes")
     public PrimitiveObject getPrimitiveObject(String label) {
-        for (Entry<WritableComparable, Writable> entry : writableMap.entrySet()) {
-            Detail<?> kd = (Detail<?>) entry.getKey();
-            if (kd.getLabel().equals(label)) {
-                return ObjectUtil.hadoop2Primitive(entry.getValue());
+        for (ValueWritable vw : values) {
+            if (vw.getLabel().toString().equals(label)) {
+                return ObjectUtil.hadoop2Primitive(vw.getValue());
             }
         }
 
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (ValueWritable vw : values) {
+            sb.append(vw.getValue().toString()).append(StringUtil.TAB);
+        }
+
+        if (sb.length() == 0) {
+            return "";
+        }
+
+        return sb.substring(0, sb.length() - 1);
     }
 }

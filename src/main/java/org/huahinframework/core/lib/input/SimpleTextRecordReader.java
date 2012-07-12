@@ -58,6 +58,9 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
     private String separator;
     private boolean formatIgnored;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void initialize(InputSplit genericSplit, TaskAttemptContext context)
             throws IOException, InterruptedException {
@@ -96,6 +99,9 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
         this.separator = context.getConfiguration().get(SimpleJob.SEPARATOR, StringUtil.COMMA);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean nextKeyValue() throws IOException, InterruptedException {
         if (key == null) {
@@ -153,16 +159,25 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Key getCurrentKey() throws IOException, InterruptedException {
         return key;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Value getCurrentValue() throws IOException, InterruptedException {
         return value;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getProgress() throws IOException, InterruptedException {
         if (start == end) {
@@ -172,6 +187,9 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public synchronized void close() throws IOException {
         if (in != null) {

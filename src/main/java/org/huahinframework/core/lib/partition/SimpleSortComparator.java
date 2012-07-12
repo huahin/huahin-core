@@ -17,16 +17,14 @@
  */
 package org.huahinframework.core.lib.partition;
 
+import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.SortedMapWritable;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 import org.huahinframework.core.io.Key;
 import org.huahinframework.core.io.Record;
-import org.huahinframework.core.io.SortDetail;
+import org.huahinframework.core.io.SortWritable;
 import org.huahinframework.core.util.ObjectUtil;
 
 /**
@@ -55,26 +53,26 @@ public class SimpleSortComparator extends WritableComparator {
                 return identifier;
             }
 
-            SortedMapWritable oneSort = Key.class.cast(a).sort();
-            SortedMapWritable otherSort = Key.class.cast(b).sort();
+            Map<Integer, SortWritable> oneSort = Key.class.cast(a).sort();
+            Map<Integer, SortWritable> otherSort = Key.class.cast(b).sort();
             if (oneSort.size() != otherSort.size()) {
                 return -1;
             }
 
-            for (Entry<WritableComparable, Writable> entry : oneSort.entrySet()) {
-                IntWritable priority = ((IntWritable) entry.getKey());
-                SortDetail oneKeyDetail = (SortDetail) entry.getValue();
-                SortDetail otherKeyDetail = (SortDetail) otherSort.get(priority);
+            for (Entry<Integer, SortWritable> entry : oneSort.entrySet()) {
+                int priority = entry.getKey();
+                SortWritable one = entry.getValue();
+                SortWritable other = otherSort.get(priority);
 
-                WritableComparable oneKey = oneKeyDetail.getKey();
-                WritableComparable otherKey = otherKeyDetail.getKey();
-                if (ObjectUtil.typeCompareTo(oneKeyDetail.getKey(), otherKeyDetail.getKey()) != 0) {
+                WritableComparable oneKey = (WritableComparable) one.getValue();
+                WritableComparable otherKey = (WritableComparable) other.getValue();
+                if (ObjectUtil.typeCompareTo(oneKey, otherKey) != 0) {
                     return -1;
                 }
 
                 int cmpare = oneKey.compareTo(otherKey);
                 if (cmpare != 0) {
-                    if (oneKeyDetail.getSort() == Record.SORT_LOWER) {
+                    if (one.getSort().get() == Record.SORT_LOWER) {
                         return cmpare;
                     } else {
                         return -cmpare;

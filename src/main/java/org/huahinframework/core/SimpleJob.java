@@ -125,6 +125,32 @@ public class SimpleJob extends Job {
     }
 
     /**
+     * Job {@link Summarizer} class setting.
+     * @param clazz {@link Summarizer} class
+     * @param combine If true is natural MapReduce
+     * @return this
+     */
+    public SimpleJob setSummaizer(Class<? extends Reducer<Key, Value, Key, Value>> clazz, boolean combine) {
+        super.setReducerClass(clazz);
+        reducer = true;
+        if (combine) {
+            super.setCombinerClass(clazz);
+        }
+        return this;
+    }
+
+    /**
+     * Job Conbiner class setting.
+     * @param clazz {@link Summarizer} class
+     * @return this
+     */
+    public SimpleJob setCombiner(Class<? extends Reducer<Key, Value, Key, Value>> clazz)
+            throws IllegalStateException {
+        super.setCombinerClass(clazz);
+        return this;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @SuppressWarnings("rawtypes")

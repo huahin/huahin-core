@@ -135,6 +135,8 @@ public class ObjectUtil {
                 Byte.valueOf(Integer.valueOf(-114).byteValue()));
         addToIdMap(VLongWritable.class,
                 Byte.valueOf(Integer.valueOf(-113).byteValue()));
+        addToIdMap(NullWritable.class,
+                Byte.valueOf(Integer.valueOf(-112).byteValue()));
 
         hadoopObjectMap.put(NULL, NullWritable.class);
         hadoopObjectMap.put(STRING, Text.class);
@@ -170,6 +172,19 @@ public class ObjectUtil {
      */
     public static Class<?> getClass(byte id) {
       return idToClassMap.get(id);
+    }
+
+    /**
+     * @return the Instnace for the specified id
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     */
+    public static Writable newInstance(byte id) throws InstantiationException, IllegalAccessException {
+      if (id == Byte.valueOf(Integer.valueOf(-112).byteValue())) {
+          return NullWritable.get();
+      }
+
+      return (Writable) idToClassMap.get(id).newInstance();
     }
 
     /**
@@ -314,7 +329,7 @@ public class ObjectUtil {
     }
 
     /**
-     * Compare the Writable.
+     * Compare the type Writable.
      * @param one the original object
      * @param other the object to be compared.
      * @return if 0, are equal.

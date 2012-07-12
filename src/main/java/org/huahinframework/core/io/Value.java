@@ -30,7 +30,7 @@ import org.huahinframework.core.util.StringUtil;
 /**
  * This class is to set the Value of Hadoop.
  */
-public class Value extends AbstractWritable {
+public class Value extends BasicWritable {
     /**
      * {@inheritDoc}
      */
@@ -41,7 +41,7 @@ public class Value extends AbstractWritable {
         }
 
         Value other = (Value) obj;
-        if (this.writableMap.size() != other.writableMap.size()) {
+        if (this.values.size() != other.values.size()) {
             return false;
         }
 
@@ -54,7 +54,8 @@ public class Value extends AbstractWritable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (Writable w : writableMap.values()) {
+        for (ValueWritable vw : values) {
+            Writable w = vw.getValue();
             if (w instanceof ArrayWritable) {
                 ArrayWritable aw = (ArrayWritable) w;
                 for (Writable x : aw.get()) {
@@ -67,7 +68,7 @@ public class Value extends AbstractWritable {
                       .append(entry.getValue().toString().toString()).append(StringUtil.TAB);
                 }
             } else {
-                sb.append(w.toString()).append("\t");
+                sb.append(w.toString()).append(StringUtil.TAB);
             }
         }
 
@@ -79,14 +80,6 @@ public class Value extends AbstractWritable {
     }
 
     /**
-     * Returns if true, values is nothing.
-     * @return If true, values is nothing
-     */
-    public boolean isEmpty() {
-        return writableMap.isEmpty();
-    }
-
-    /**
      * @param label value's label
      * @param writable add Hadoop Writable
      */
@@ -95,7 +88,7 @@ public class Value extends AbstractWritable {
             writable = NullWritable.get();
         }
 
-        writableMap.put(new ValueDetail(++order, label), writable);
+        values.add(new ValueWritable(label, writable));
     }
 
     /**
@@ -105,7 +98,7 @@ public class Value extends AbstractWritable {
     public void addPrimitiveValue(String label, Object object) {
         HadoopObject ho = ObjectUtil.primitive2Hadoop(object);
         if (ho.getObject() instanceof Writable) {
-            writableMap.put(new ValueDetail(++order, label), ho.getObject());
+            values.add(new ValueWritable(label, ho.getObject()));
             return;
         }
 

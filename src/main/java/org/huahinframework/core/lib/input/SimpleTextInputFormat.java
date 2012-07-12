@@ -31,9 +31,12 @@ import org.huahinframework.core.io.Key;
 import org.huahinframework.core.io.Value;
 
 /**
- *
+ * Treats keys as offset in file and value as line.
  */
 public class SimpleTextInputFormat extends FileInputFormat<Key, Value> {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public RecordReader<Key, Value>
         createRecordReader(InputSplit split,
@@ -41,6 +44,9 @@ public class SimpleTextInputFormat extends FileInputFormat<Key, Value> {
         return new SimpleTextRecordReader();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected boolean isSplitable(JobContext context, Path file) {
         CompressionCodec codec =
