@@ -89,10 +89,13 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
             }
             in = new LineReader(fileIn, job);
         }
-        if (skipFirstLine) {  // skip first line and re-establish "start".
+
+        // skip first line and re-establish "start".
+        if (skipFirstLine) {
             start += in.readLine(new Text(), 0,
                         (int)Math.min((long)Integer.MAX_VALUE, end - start));
         }
+
         this.pos = start;
         this.formatIgnored = context.getConfiguration().getBoolean(SimpleJob.FORMAT_IGNORED, false);
         this.labels = context.getConfiguration().getStrings(SimpleJob.LABELS);
