@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 /**
@@ -64,7 +65,12 @@ public class Runner {
         int status = -1;
 
         try {
-            status =  ToolRunner.run(jobMap.get(jobName).newInstance(), args);
+            Class<? extends Tool> clazz = jobMap.get(jobName);
+            if (clazz == null) {
+                log.error("Tool class not found.");
+                return status;
+            }
+            status =  ToolRunner.run(clazz.newInstance(), args);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e);
