@@ -22,7 +22,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.ObjectWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.huahinframework.core.util.ObjectUtil;
@@ -37,7 +36,6 @@ public class SortWritable implements WritableComparable<SortWritable> {
     private Writable value;
 
     public SortWritable() {
-        value = new ObjectWritable();
     }
 
     public SortWritable(int sort, int sortPriority, Writable value) {

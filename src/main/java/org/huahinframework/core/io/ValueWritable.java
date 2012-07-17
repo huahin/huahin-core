@@ -21,7 +21,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.io.ObjectWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.huahinframework.core.util.ObjectUtil;
@@ -37,7 +36,6 @@ public class ValueWritable implements Writable {
      * default constractor
      */
     public ValueWritable() {
-        value = new ObjectWritable();
     }
 
     /**
