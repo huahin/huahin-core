@@ -202,15 +202,6 @@ public abstract class SimpleJobTool extends Configured implements Tool {
     protected abstract String setInputPath(String[] args);
 
     /**
-     * Gets the master path from the argument.
-     * @param args input args
-     * @return master input path
-     */
-    protected String getMasterPath(String[] args) {
-        return null;
-    }
-
-    /**
      * Set the path from the output parameters.
      * @param args output args
      * @return output path
