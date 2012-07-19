@@ -64,8 +64,8 @@ public class Value extends BasicWritable {
             } else if (w instanceof MapWritable) {
                 MapWritable mw = (MapWritable) w;
                 for (Entry<Writable, Writable> entry : mw.entrySet()){
-                    sb.append(entry.getKey().toString().toString()).append(StringUtil.TAB)
-                      .append(entry.getValue().toString().toString()).append(StringUtil.TAB);
+                    sb.append(entry.getKey().toString()).append(StringUtil.TAB)
+                      .append(entry.getValue().toString()).append(StringUtil.TAB);
                 }
             } else {
                 sb.append(w.toString()).append(StringUtil.TAB);
