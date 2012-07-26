@@ -20,9 +20,9 @@ package org.huahinframework.core.io;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.apache.hadoop.io.NullWritable;
@@ -35,7 +35,7 @@ import org.huahinframework.core.util.ObjectUtil;
  * This class is to set the Key of Hadoop.
  */
 public class Key extends BasicWritable implements WritableComparable<Key> {
-    private List<SortWritable> sorts = new ArrayList<SortWritable>();
+    private Map<Integer, SortWritable> sortMap = new TreeMap<Integer, SortWritable>();
 
     /**
      * {@inheritDoc}
@@ -44,12 +44,12 @@ public class Key extends BasicWritable implements WritableComparable<Key> {
     public void readFields(DataInput in) throws IOException {
         try {
             super.readFields(in);
-            sorts.clear();
+            sortMap.clear();
             int entries = in.readInt();
             for (int i = 0; i < entries; i++) {
                 SortWritable sw = new SortWritable();
                 sw.readFields(in);
-                sorts.add(sw);
+                sortMap.put(sw.getSortPriority().get(), sw);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -62,9 +62,9 @@ public class Key extends BasicWritable implements WritableComparable<Key> {
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        out.writeInt(sorts.size());
-        for (SortWritable sw : sorts) {
-            sw.write(out);
+        out.writeInt(sortMap.size());
+        for (Entry<Integer, SortWritable> entry : sortMap.entrySet()) {
+            entry.getValue().write(out);
         }
     }
 
@@ -96,6 +96,15 @@ public class Key extends BasicWritable implements WritableComparable<Key> {
     }
 
     /**
+     * Returns if true, values and sortMap is nothing.
+     * @return If true, values and sortMap is nothing
+     */
+    @Override
+    public boolean isEmpty() {
+        return super.isEmpty() && sortMap.isEmpty();
+    }
+
+    /**
      * Returns a value that is used for grouping
      * @return grouping values
      */
@@ -104,37 +113,24 @@ public class Key extends BasicWritable implements WritableComparable<Key> {
     }
 
     /**
-     * Returns the Key for sorting.
-     * @return value of sort
-     */
-    public Map<Integer, SortWritable> sort() {
-        Map<Integer, SortWritable> m = new TreeMap<Integer, SortWritable>();
-        for (SortWritable sw : sorts) {
-            m.put(sw.getSortPriority().get(), sw);
-        }
-
-        return m;
-    }
-
-    /**
      * set new sort
-     * @param smw sort
+     * @param sortMap sort
      */
-    public void setSort(List<SortWritable> sorts) {
-        this.sorts = sorts;
+    public void setSort(Map<Integer, SortWritable> sortMap) {
+        this.sortMap = sortMap;
     }
 
     /**
      * Returns a value that is used for sort
      * @return sort
      */
-    public List<SortWritable> getSort() {
-        return sorts;
+    public Map<Integer, SortWritable> getSort() {
+        return sortMap;
     }
 
     /**
      * set new grouping
-     * @param smw grouping
+     * @param values grouping
      */
     public void setGrouping(List<ValueWritable> values) {
         this.values = values;
@@ -161,7 +157,7 @@ public class Key extends BasicWritable implements WritableComparable<Key> {
      * @return If true, sort is nothing
      */
     public boolean isSortEmpty() {
-        return sorts.isEmpty();
+        return sortMap.isEmpty();
     }
 
     /**
@@ -169,7 +165,7 @@ public class Key extends BasicWritable implements WritableComparable<Key> {
      */
     public void clear() {
         super.clear();
-        sorts.clear();
+        sortMap.clear();
     }
 
     /**
@@ -192,7 +188,8 @@ public class Key extends BasicWritable implements WritableComparable<Key> {
         }
 
         if (sort != Record.SORT_NON) {
-            sorts.add(new SortWritable(sort, sortPriority, writable));
+            SortWritable sw = new SortWritable(sort, sortPriority, writable);
+            sortMap.put(sw.getSortPriority().get(), sw);
         }
     }
 
@@ -211,7 +208,8 @@ public class Key extends BasicWritable implements WritableComparable<Key> {
         if (grouping) {
             values.add(new ValueWritable(label, writable));
         } else if (sort != Record.SORT_NON) {
-            sorts.add(new SortWritable(sort, sortPriority, writable));
+            SortWritable sw = new SortWritable(sort, sortPriority, writable);
+            sortMap.put(sw.getSortPriority().get(), sw);
         }
     }
 
@@ -233,7 +231,8 @@ public class Key extends BasicWritable implements WritableComparable<Key> {
         HadoopObject ho = ObjectUtil.primitive2Hadoop(object);
         if (ho.getObject() instanceof WritableComparable) {
             if (sort != Record.SORT_NON) {
-                sorts.add(new SortWritable(sort, sortPriority, ho.getObject()));
+                SortWritable sw = new SortWritable(sort, sortPriority, ho.getObject());
+                sortMap.put(sw.getSortPriority().get(), sw);
             }
             return;
         }
@@ -254,7 +253,8 @@ public class Key extends BasicWritable implements WritableComparable<Key> {
             if (grouping) {
                 values.add(new ValueWritable(label, ho.getObject()));
             } else if (sort != Record.SORT_NON) {
-                sorts.add(new SortWritable(sort, sortPriority, ho.getObject()));
+                SortWritable sw = new SortWritable(sort, sortPriority, ho.getObject());
+                sortMap.put(sw.getSortPriority().get(), sw);
             }
             return;
         }

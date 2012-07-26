@@ -15,23 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.huahinframework.core;
+package org.huahinframework.core.writer;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.huahinframework.core.io.Record;
 
 /**
  * Writer is wrapping Context#write.
  */
-public class Writer {
-    private Record defaultRecord;
-
-    @SuppressWarnings("rawtypes")
-    private TaskInputOutputContext context;
-
+public interface Writer {
     /**
      * Outputs the Record.
      * <p>If the grouping and value is not specified, input is output as it is.</p>
@@ -39,53 +33,32 @@ public class Writer {
      * @throws IOException
      * @throws InterruptedException
      */
-    @SuppressWarnings("unchecked")
-    public void write(Record record)
-            throws IOException, InterruptedException {
-        if (record.isKeyEmpty()) {
-            record.setKey(defaultRecord.getKey());
-        } else {
-            if (record.getKey().isGroupingEmpty() &&
-                !record.getKey().isSortEmpty()) {
-                record.getKey().setGrouping(defaultRecord.getKey().getGrouping());
-            }
-        }
+    public void write(Record record) throws IOException, InterruptedException;
 
-        if (record.isValueEmpty()) {
-            record.setValue(defaultRecord.getValue());
-        }
-
-        context.write(record.isGroupingNothing() ? NullWritable.get() : record.getKey(),
-                      record.isValueNothing() ? NullWritable.get() : record.getValue());
-    }
+    /**
+     * Falush the Record
+     */
+    public void flush() throws IOException, InterruptedException;
 
     /**
      * @return the defaultRecord
      */
-    public Record getDefaultRecord() {
-        return defaultRecord;
-    }
+    public Record getDefaultRecord();
 
     /**
      * @param defaultRecord the defaultRecord to set
      */
-    public void setDefaultRecord(Record defaultRecord) {
-        this.defaultRecord = defaultRecord;
-    }
+    public void setDefaultRecord(Record defaultRecord);
 
     /**
      * @return the context
      */
     @SuppressWarnings("rawtypes")
-    public TaskInputOutputContext getContext() {
-        return context;
-    }
+    public TaskInputOutputContext getContext();
 
     /**
      * @param context the context to set
      */
     @SuppressWarnings("rawtypes")
-    public void setContext(TaskInputOutputContext context) {
-        this.context = context;
-    }
+    public void setContext(TaskInputOutputContext context);
 }

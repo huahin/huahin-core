@@ -25,10 +25,16 @@ import java.io.IOException;
 public class DataFormatException extends IOException {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * default constractor
+     */
     public DataFormatException() {
         super();
     }
 
+    /**
+     * @param msg message
+     */
     public DataFormatException(String msg) {
         super(msg);
     }

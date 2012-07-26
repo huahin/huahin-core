@@ -86,7 +86,7 @@ public class PathSummarizer extends Summarizer {
     }
 
     @Override
-    public void summarizer(Writer writer)
+    public void summarize(Writer writer)
             throws IOException, InterruptedException {
         int pv = 0;
         while (hasNext()) {
