@@ -121,8 +121,8 @@ public class SimpleJob extends Job {
      * @param clazz {@link Summarizer} class
      * @return this
      */
-    public SimpleJob setSummaizer(Class<? extends Reducer<Key, Value, Key, Value>> clazz) {
-        return setSummaizer(clazz, false, 0);
+    public SimpleJob setSummarizer(Class<? extends Reducer<Key, Value, Key, Value>> clazz) {
+        return setSummarizer(clazz, false, 0);
     }
 
     /**
@@ -131,9 +131,9 @@ public class SimpleJob extends Job {
      * @param combine If true is natural MapReduce
      * @return this
      */
-    public SimpleJob setSummaizer(Class<? extends Reducer<Key, Value, Key, Value>> clazz,
-                                  boolean combine) {
-        return setSummaizer(clazz, combine, DEFAULT_COMBAIN_CACHE);
+    public SimpleJob setSummarizer(Class<? extends Reducer<Key, Value, Key, Value>> clazz,
+                                   boolean combine) {
+        return setSummarizer(clazz, combine, DEFAULT_COMBAIN_CACHE);
     }
 
     /**
@@ -143,14 +143,13 @@ public class SimpleJob extends Job {
      * @param In-Mapper Combine output cahce number. Default value is 200.
      * @return this
      */
-    public SimpleJob setSummaizer(Class<? extends Reducer<Key, Value, Key, Value>> clazz,
-                                  boolean combine,
-                                  int cache) {
+    public SimpleJob setSummarizer(Class<? extends Reducer<Key, Value, Key, Value>> clazz,
+                                   boolean combine,
+                                   int cache) {
         super.setReducerClass(clazz);
         reducer = true;
         if (combine) {
-            super.setCombinerClass(clazz);
-            getConfiguration().setInt(COMBINE_CACHE, cache);
+            setCombiner(clazz, cache);
         }
         return this;
     }

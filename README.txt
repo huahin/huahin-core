@@ -136,7 +136,7 @@ public class PathPVJobTool extends SimpleJobTool {
 
         SimpleJob job = addJob(labels, StringUtil.TAB);
         job.setFilter(PathFileter.class);
-        job.setSummaizer(PathSummarizer.class);
+        job.setSummarizer(PathSummarizer.class);
     }
 }
 
