@@ -140,7 +140,7 @@ public class SimpleJob extends Job {
      * Job {@link Summarizer} class setting.
      * @param clazz {@link Summarizer} class
      * @param combine If true is natural MapReduce
-     * @param In-Mapper Combine output cahce number. Default value is 200.
+     * @param cache In-Mapper Combine output cahce number. Default value is 200.
      * @return this
      */
     public SimpleJob setSummarizer(Class<? extends Reducer<Key, Value, Key, Value>> clazz,
@@ -167,7 +167,7 @@ public class SimpleJob extends Job {
     /**
      * Job Conbiner class setting.
      * @param clazz {@link Summarizer} class
-     * @param In-Mapper Combine output cahce number. Default value is 200.
+     * @param cache In-Mapper Combine output cahce number. Default value is 200.
      * @return this
      */
     public SimpleJob setCombiner(Class<? extends Reducer<Key, Value, Key, Value>> clazz,
