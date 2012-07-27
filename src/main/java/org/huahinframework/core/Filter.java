@@ -23,6 +23,9 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.huahinframework.core.io.Key;
 import org.huahinframework.core.io.Record;
 import org.huahinframework.core.io.Value;
+import org.huahinframework.core.writer.BasicWriter;
+import org.huahinframework.core.writer.CombineWriter;
+import org.huahinframework.core.writer.Writer;
 
 /**
  * This class is wrapping the {@link Mapper} class.
@@ -64,7 +67,7 @@ import org.huahinframework.core.io.Value;
  */
 public abstract class Filter extends Mapper<Key, Value, Key, Value> {
     protected Context context;
-    private Writer writer = new Writer();
+    private Writer writer;
 
     /**
      * {@inheritDoc}
@@ -88,7 +91,27 @@ public abstract class Filter extends Mapper<Key, Value, Key, Value> {
     public void setup(Context context)
             throws IOException ,InterruptedException {
         this.context = context;
+        try {
+            if (context.getCombinerClass() != null) {
+                writer = new CombineWriter(context.getCombinerClass(),
+                                           getIntParameter(SimpleJob.COMBINE_CACHE));
+            } else {
+                writer = new BasicWriter();
+            }
+        } catch (Exception e) {
+            writer = new BasicWriter();
+        }
         filterSetup();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void cleanup(Context context)
+            throws IOException, InterruptedException {
+        super.cleanup(context);
+        writer.flush();
     }
 
     /**

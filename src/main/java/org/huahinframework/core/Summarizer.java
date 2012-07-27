@@ -21,16 +21,19 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.huahinframework.core.io.Key;
 import org.huahinframework.core.io.Record;
 import org.huahinframework.core.io.Value;
+import org.huahinframework.core.writer.BasicWriter;
+import org.huahinframework.core.writer.Writer;
 
 /**
  * This class is wrapping the {@link Reducer} class.
  * <code>Summarizer</code> will process a given record from {@link Filter}.
  *
  * <p>The framework first calls {@link #summarizerSetup()}, followed by
- * {@link #init()} and {@link #summarizer(Writer)} for each {@link Record} in the input.</p>
+ * {@link #init()} and {@link #summarize(Writer)} for each {@link Record} in the input.</p>
  *
  * <p>The following is an example to do a count of the WORD that was passed from Filter.
  * Has not specified grouping, will use the default.</p>
@@ -41,7 +44,7 @@ import org.huahinframework.core.io.Value;
  *   public void init() {
  *   }
  *
- *   public void summarizer(Writer writer)
+ *   public void summarize(Writer writer)
  *       throws IOException, InterruptedException {
  *     int count = 0;
  *     while (hasNext()) {
@@ -65,9 +68,10 @@ import org.huahinframework.core.io.Value;
  */
 public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
     protected Context context;
-    private Writer writer = new Writer();
+    protected boolean combine = false;
+    private Writer writer = new BasicWriter();
     private Iterator<Value> recordIte;
-    private Key currentKey;
+    private Record currentRecord = new Record();
 
     /**
      * {@inheritDoc}
@@ -77,9 +81,29 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
         writer.setContext(context);
         init();
 
-        currentKey = key;
+        currentRecord.setKey(key);
         recordIte = values.iterator();
-        summarizer(writer);
+        summarize(writer);
+    }
+
+    /**
+     * Combiner for In-Mapper Combiner
+     * @param key {@link Key}
+     * @param values {@link Value} iterator
+     * @param context {@link TaskInputOutputContext} context
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @SuppressWarnings("rawtypes")
+    public void combine(Key key, Iterable<Value> values, TaskInputOutputContext context)
+            throws IOException ,InterruptedException {
+        combine = true;
+        writer.setContext(context);
+        init();
+
+        currentRecord.setKey(key);
+        recordIte = values.iterator();
+        summarize(writer);
     }
 
     /**
@@ -105,9 +129,17 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
      * @return the next {@link Record} in the iteration.
      */
     protected Record next(Writer writer) {
-        Record record = new Record(currentKey, recordIte.next());
-        writer.setDefaultRecord(record);
-        return record;
+        currentRecord.setValue(recordIte.next());
+        writer.setDefaultRecord(currentRecord);
+        return currentRecord;
+    }
+
+    /**
+     * Returns if true, summarize is combine.
+     * @return if true, summarize is combine.
+     */
+    protected boolean isCombine() {
+        return combine;
     }
 
     /**
@@ -115,9 +147,7 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
      * @return grouping record
      */
     protected Record getGroupingRecord() {
-        Record record = new Record();
-        record.setKey(currentKey);
-        return record;
+        return currentRecord;
     }
 
     /**
@@ -153,12 +183,12 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
     public abstract void init();
 
     /**
-     * <code>summarizer</code> will process a given record from {@link Filter}.
+     * <code>summarize</code> will process a given record from {@link Filter}.
      * @param writer the output using the writer.
      * @throws IOException
      * @throws InterruptedException
      */
-    public abstract void summarizer(Writer writer) throws IOException ,InterruptedException;
+    public abstract void summarize(Writer writer) throws IOException ,InterruptedException;
 
     /**
      * Called once at the beginning of the task.

@@ -228,7 +228,7 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      * @throws IOException
      */
     protected SimpleJob addJob(boolean natural) throws IOException {
-        return addJob(new SimpleJob(natural, conf, jobName), null, null, false);
+        return addJob(new SimpleJob(conf, jobName, natural), null, null, false);
     }
 
     /**

@@ -53,8 +53,8 @@ public class SimpleSortComparator extends WritableComparator {
                 return identifier;
             }
 
-            Map<Integer, SortWritable> oneSort = Key.class.cast(a).sort();
-            Map<Integer, SortWritable> otherSort = Key.class.cast(b).sort();
+            Map<Integer, SortWritable> oneSort = Key.class.cast(a).getSort();
+            Map<Integer, SortWritable> otherSort = Key.class.cast(b).getSort();
             if (oneSort.size() != otherSort.size()) {
                 return -1;
             }
@@ -64,13 +64,11 @@ public class SimpleSortComparator extends WritableComparator {
                 SortWritable one = entry.getValue();
                 SortWritable other = otherSort.get(priority);
 
-                WritableComparable oneKey = (WritableComparable) one.getValue();
-                WritableComparable otherKey = (WritableComparable) other.getValue();
-                if (ObjectUtil.typeCompareTo(oneKey, otherKey) != 0) {
+                if (ObjectUtil.typeCompareTo(one.getValue(), other.getValue()) != 0) {
                     return -1;
                 }
 
-                int cmpare = oneKey.compareTo(otherKey);
+                int cmpare = one.compareTo(other);
                 if (cmpare != 0) {
                     if (one.getSort().get() == Record.SORT_LOWER) {
                         return cmpare;

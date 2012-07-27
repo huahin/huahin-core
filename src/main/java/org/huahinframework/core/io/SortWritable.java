@@ -35,9 +35,17 @@ public class SortWritable implements WritableComparable<SortWritable> {
     private IntWritable sortPriority = new IntWritable();
     private Writable value;
 
+    /**
+     * default constractor
+     */
     public SortWritable() {
     }
 
+    /**
+     * @param sort upper or lower
+     * @param sortPriority sort priority
+     * @param value sort value
+     */
     public SortWritable(int sort, int sortPriority, Writable value) {
         this.sort.set(sort);
         this.sortPriority.set(sortPriority);
