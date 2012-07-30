@@ -1,2 +1,3 @@
 0.1.1
  * update: Performance improvement.
+ * update: Combiner supported. If you specified a Combiner, In-Mapper Combiner is set automatically.
