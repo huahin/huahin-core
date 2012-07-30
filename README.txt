@@ -104,12 +104,12 @@ public class PathSummarizer extends Summarizer {
     }
 }
 
-Summarizer is an abstract class change to Reducer. Summarizer class is processed by summarizer method.
+Summarizer is an abstract class change to Reducer. Summarizer class is processed by summarize method.
 Call the Summarizer#next method in Summarizer, to get the Record.
 The end of the Record decision, use the Summarizer#hasNext method.
 This specification is similar to the iterator of Java.
 
-Record the parameters of the summarizer method will contain the Value and Key.
+Record the parameters of the summarize method will contain the Value and Key.
 To get the value specifies the type and label. Writer is used to write the Record.
 Record using the Writer to write, you specify groups, values, and the sort.
 
