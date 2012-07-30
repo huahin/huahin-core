@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Huahin Core : Huahin is simple Java framework for Hadoop MapReduce." />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Huahin Core</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/huahin/huahin-core">View on GitHub</a>
+
+          <h1 id="project_title">Huahin Core</h1>
+          <h2 id="project_tagline">Huahin is simple Java framework for Hadoop MapReduce.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/huahin/huahin-core/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/huahin/huahin-core/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>Huahin Core</h2>
+
+<p>Huahin is simple Java framework for Hadoop MapReduce.
+Huahin can developement easily than normal MapReduce.
+Huahin is unlike Hive and Pig, are purpose to be develop flexible native Java MapReduce.</p>
+
+<h2>Prerequisites</h2>
+
+<p>Huahin is based on MapReduce programs written on 0.20.x, 0.22.x, 1.0.x version(MRv1) of Hadoop.</p>
+
+<h2>Overview</h2>
+
+<p>Huahin is a framework that wraps the MapReduce. If there is a lack of features,
+you can also write directly because it is written in Java.</p>
+
+<p>Later in this tutorial will introduce sprinkled with a simple example.</p>
+
+<p>Details or run of MapReduce, please refer to the tutorial of MapReduce.(<a href="http://hadoop.apache.org/mapreduce/">http://hadoop.apache.org/mapreduce/</a>)</p>
+
+<h2>Releases</h2>
+
+<p>current version is 0.1.1.</p>
+
+<h4>30 July, 2012: Release 0.1.1 available</h4>
+
+<ul>
+<li>update: Performance improvement.</li>
+<li>update: Combiner supported. If you specified a Combiner, In-Mapper Combiner is set automatically.</li>
+</ul><h4>28 Jun, 2012: Release 0.1.0 available</h4>
+
+<p>This is the first version.</p>
+
+<h2>Install</h2>
+
+<p>Gets the jar using maven.</p>
+
+<pre><code>&lt;dependency&gt;
+  &lt;groupId&gt;org.huahinframework&lt;/groupId&gt;
+  &lt;artifactId&gt;huahin-core&lt;/artifactId&gt;
+  &lt;version&gt;x.x.x&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+
+<p>Or, get the source code.</p>
+
+<pre><code>git clone git://github.com/huahin/huahin-core.git
+</code></pre>
+
+<h2>Example: URL path page view</h2>
+
+<p>This example is intended to summarize the page views of the path from the log of the Web Server.
+Data format is "USER, DATE, REFERRER, URL" in TSV format.</p>
+
+<p>Source Code: PathFileter.java</p>
+
+<pre><code>public class PathFileter extends Filter {
+  @Override
+  public void init() {
+  }
+
+  @Override
+  public void filter(Record record, Writer writer)
+      throws IOException, InterruptedException {
+    String url = record.getValueString("URL");
+    URI uri = URI.create(url);
+    String path = uri.getPath();
+    if (path == null) {
+      return;
+    }
+
+    String user = record.getValueString("USER");
+    String date = StringUtil.split(record.getValueString("DATE"), " ", true)[0];
+
+    Record emitRecord = new Record();
+    emitRecord.addGrouping("DATE", date);
+    emitRecord.addGrouping("PATH", path);
+    emitRecord.addValue("USER", user);
+    writer.write(emitRecord);
+  }
+
+  @Override
+  public void filterSetup() {
+  }
+}
+</code></pre>
+
+<p>Filter is an abstract class change to Mapper. Filter class is processed by filter method.
+Record the parameters of the filter method will contain the Value and Key.
+To get the value specifies the type and label. Writer is used to write the Record.</p>
+
+<p>Record using the Writer to write, you specify groups, values, and the sort.</p>
+
+<p>Filter#init method is called before each filter is called.</p>
+
+<p>Filter#fileterSetup method is called once at the beginning of the task.</p>
+
+<p>Source Code: PathSummarizer.java</p>
+
+<pre><code>public class PathSummarizer extends Summarizer {
+  @Override
+  public void init() {
+  }
+
+  @Override
+  public void summarize(Writer writer)
+      throws IOException, InterruptedException {
+    int pv = 0;
+    while (hasNext()) {
+      next(writer);
+      pv++;
+    }
+
+    Record emitRecord = new Record();
+    emitRecord.addValue("PV", pv);
+    writer.write(emitRecord);
+  }
+
+  @Override
+  public void summarizerSetup() {
+  }
+}
+</code></pre>
+
+<p>Summarizer is an abstract class change to Reducer. Summarizer class is processed by summarize method.
+Call the Summarizer#next method in Summarizer, to get the Record.
+The end of the Record decision, use the Summarizer#hasNext method.
+This specification is similar to the iterator of Java.</p>
+
+<p>Record the parameters of the summarize method will contain the Value and Key.
+To get the value specifies the type and label. Writer is used to write the Record.
+Record using the Writer to write, you specify groups, values, and the sort.</p>
+
+<p>Summarizer#init method is called for each group.</p>
+
+<p>Summarizer#summarizerSetup method is called once at the beginning of the task.</p>
+
+<p>Source Code: PathPVJobTool.java</p>
+
+<pre><code>public class PathPVJobTool extends SimpleJobTool {
+  @Override
+  protected String setInputPath(String[] args) {
+    return args[0];
+  }
+
+  @Override
+  protected String setOutputPath(String[] args) {
+    return args[1];
+  }
+
+  @Override
+  protected void setup() throws Exception {
+    final String[] labels = new String[] { "USER", "DATE", "REFERER", "URL" };
+
+    SimpleJob job = addJob(labels, StringUtil.TAB);
+    job.setFilter(PathFileter.class);
+    job.setSummarizer(PathSummarizer.class);
+  }
+}
+</code></pre>
+
+<p>To configure the Job, you will create a tool that inherit from this class.
+Set the input path of HDFS in SimpleJobTool#setInputPath method.
+Set the output path of HDFS in SimpleJobTool#setOutputPath method.</p>
+
+<p>Set up a job in the SimpleJobTool#setup method.
+Add a job in the addJob method, set the Fileter in setFilter, to set the Summarizer in setSummarizer.</p>
+
+<p>For more information, check the Javadoc.</p>
+
+<p>Source Code: Jobs.java</p>
+
+<pre><code>public class Jobs {
+  public static void main(String[] args) {
+    if (args.length != 3) {
+      System.err.println("[jobName] args...");
+      System.exit(-1);
+    }
+
+    // Remove the leading argument and call run
+    String jobName = args[0];
+    String[] newArgs = new String[args.length - 1];
+    for (int i = 1; i &lt; args.length; ++i) {
+      newArgs[i - 1] = args[i];
+    }
+
+    Runner runner = new Runner();
+    runner.addJob("PathPV", PathPVJobTool.class);
+
+    int status = runner.run(jobName, newArgs);
+    System.exit(status);
+  }
+}
+</code></pre>
+
+<p>Runner can be called easily the Job. Add the name and Job in JobTool addJob method.
+To run the job, you call the run out by specifying the Job name and parameters you have just registered.
+In this example, delete the name of Job from the startup parameters, and set the run parameters.</p>
+
+<p>For more information, check the Huahin Examples.</p>
+
+<h3>Support or Contact</h3>
+
+<p>Contact <a href="mailto:huahin-framework@googlegroups.com">huahin-framework@googlegroups.com</a> and we’ll help you sort it out.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Huahin Core maintained by <a href="https://github.com/huahin">huahin</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-32923864-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+
+  </body>
+</html>
