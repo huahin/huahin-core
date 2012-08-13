@@ -33,10 +33,20 @@ import org.huahinframework.core.lib.partition.SimpleSortComparator;
  * This class is wrapping the {@link Job} class.
  */
 public class SimpleJob extends Job {
+    public static final String ONPREMISE = "ONPREMISE";
     public static final String LABELS = "LABELS";
+    public static final String MASTER_LABELS = "MASTER_LABELS";
+    public static final String MASTER_PATH = "MASTER_PATH";
+    public static final String JOIN_REGEX = "JOIN_REGEX";
+    public static final String SIMPLE_JOIN_MASTER_COLUMN = "SIMPLE_JOIN_MASTER_COLUMN";
+    public static final String SIMPLE_JOIN_DATA_COLUMN = "SIMPLE_JOIN_DATA_COLUMN";
     public static final String SEPARATOR = "SEPARATOR";
+    public static final String MASTER_SEPARATOR = "MASTER_SEPARATOR";
     public static final String FORMAT_IGNORED = "FORMAT_IGNORED";
     public static final String COMBINE_CACHE = "COMBINE_CACHE";
+
+    public static final String AWS_ACCESS_KEY = "AWS_ACCESS_KEY";
+    public static final String AWS_SECRET_KEY = "AWS_SECRET_KEY";
 
     public static final int DEFAULT_COMBAIN_CACHE = 200;
 
@@ -198,6 +208,58 @@ public class SimpleJob extends Job {
             throws IllegalStateException {
         super.setReducerClass(cls);
         reducer = true;
+    }
+
+    /**
+     * TODO: Detail of SimpleJoin.
+     * @param masterLabels label of master data
+     * @param mColumn master column
+     * @param dColumn data column
+     * @param masterPath master data HDFS path
+     * @return this
+     */
+    public SimpleJob setSimpleJoin(String[] masterLabels, String mColumn, String dColumn,
+                                   String masterPath) {
+        String separator = conf.get(SEPARATOR);
+        setSimpleJoin(masterLabels, mColumn, dColumn, masterPath, separator, false);
+        return this;
+    }
+
+    /**
+     * TODO: Detail of SimpleJoin.
+     * @param masterLabels label of master data
+     * @param mColumn master column
+     * @param dColumn data column
+     * @param masterPath master data HDFS path
+     * @param regex master join is regex;
+     * @return this
+     */
+    public SimpleJob setSimpleJoin(String[] masterLabels, String mColumn, String dColumn,
+                                   String masterPath, boolean regex) {
+        String separator = conf.get(SEPARATOR);
+        setSimpleJoin(masterLabels, mColumn, dColumn, masterPath, separator, regex);
+        return this;
+    }
+
+    /**
+     * TODO: Detail of SimpleJoin.
+     * @param masterLabels label of master data
+     * @param mColumn master column
+     * @param dColumn data column
+     * @param masterPath master data HDFS path
+     * @param separator separator
+     * @param regex master join is regex;
+     * @return this
+     */
+    public SimpleJob setSimpleJoin(String[] masterLabels, String mColumn, String dColumn,
+                                   String masterPath, String separator, boolean regex) {
+        conf.setStrings(MASTER_LABELS, masterLabels);
+        conf.set(SIMPLE_JOIN_MASTER_COLUMN, mColumn);
+        conf.set(SIMPLE_JOIN_DATA_COLUMN, dColumn);
+        conf.set(MASTER_PATH, masterPath);
+        conf.set(MASTER_SEPARATOR, separator);
+        conf.setBoolean(JOIN_REGEX, regex);
+        return this;
     }
 
     /**

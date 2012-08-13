@@ -17,11 +17,15 @@
  */
 package org.huahinframework.core.util;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -29,6 +33,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 /**
@@ -36,6 +41,8 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
  */
 public class S3Utils implements PathUtils {
     private AmazonS3 s3;
+    private String accessKey;
+    private String secretKey;
 
     /**
      * @param accessKey AWS access key
@@ -73,5 +80,66 @@ public class S3Utils implements PathUtils {
 
         s3.deleteObjects(new DeleteObjectsRequest(bucketName).withKeys(keys));
         s3.deleteObject(bucketName, key);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+    @Override
+    public Map<String, String[]> getSimpleMaster(String[] masterLabels,
+                                                 String joinColumn,
+                                                 String path,
+                                                 String separator) throws IOException, URISyntaxException {
+        Map<String, String[]> m = new HashMap<String, String[]>();
+
+        URI uri = new URI(path);
+        String key = uri.getPath().substring(1);
+        S3Object s3Object = s3.getObject(uri.getHost(), key);
+
+        int joinNo = 0;
+        for (int i = 0; i < masterLabels.length; i++) {
+            if (joinColumn.equals(masterLabels[i])) {
+                joinNo = i;
+                break;
+            }
+        }
+
+        BufferedReader br =
+                new BufferedReader(new InputStreamReader(s3Object.getObjectContent(), "UTF-8"));
+
+        String line;
+        while ((line = br.readLine()) != null) {
+            String[] strings = StringUtil.split(line, separator, false);
+            if (masterLabels.length != strings.length) {
+                continue;
+            }
+
+            String joinData = strings[joinNo];
+            String[] data = new String[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                data[i] = strings[i];
+            }
+
+            m.put(joinData, data);
+        }
+        br.close();
+
+        return m;
+    }
+
+    /**
+     * @return the accessKey
+     */
+    public String getAccessKey() {
+        return accessKey;
+    }
+
+    /**
+     * @return the secretKey
+     */
+    public String getSecretKey() {
+        return secretKey;
     }
 }

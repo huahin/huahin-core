@@ -19,6 +19,7 @@ package org.huahinframework.core.util;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Map;
 
 /**
  * Is a utility for the path.
@@ -31,4 +32,17 @@ public interface PathUtils {
      * @throws URISyntaxException
      */
     public void delete(String path) throws IOException, URISyntaxException;
+
+    /**
+     * create simple master data
+     * @param masterLabels master labels
+     * @param joinColumn column for join
+     * @param path master path
+     * @param separator data separator
+     * @return master master data. Dose not exist is null.
+     * @throws IOException
+     */
+    public Map<String, String[]> getSimpleMaster(String[] masterLabels, String joinColumn,
+                                                 String path, String separator)
+                                                         throws IOException, URISyntaxException;
 }

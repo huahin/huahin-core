@@ -17,7 +17,11 @@
  */
 package org.huahinframework.core.util;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -50,5 +54,53 @@ public class HDFSUtils implements PathUtils {
             }
         }
         fs.delete(new Path(path), true);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @throws IOException
+     */
+    @Override
+    public Map<String, String[]> getSimpleMaster(String[] masterLabels,
+                                                 String joinColumn,
+                                                 String path,
+                                                 String separator) throws IOException {
+        Map<String, String[]> m = new HashMap<String, String[]>();
+
+        FileSystem fs = FileSystem.get(conf);
+        FileStatus fstatus = fs.getFileStatus(new Path(path));
+        if (fstatus == null) {
+            return null;
+        }
+
+        int joinNo = 0;
+        for (int i = 0; i < masterLabels.length; i++) {
+            if (joinColumn.equals(masterLabels[i])) {
+                joinNo = i;
+                break;
+            }
+        }
+
+        BufferedReader br =
+                new BufferedReader(new InputStreamReader(fs.open(fstatus.getPath())));
+
+        String line;
+        while ((line = br.readLine()) != null) {
+            String[] strings = StringUtil.split(line, separator, false);
+            if (masterLabels.length != strings.length) {
+                continue;
+            }
+
+            String joinData = strings[joinNo];
+            String[] data = new String[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                data[i] = strings[i];
+            }
+
+            m.put(joinData, data);
+        }
+        br.close();
+
+        return m;
     }
 }

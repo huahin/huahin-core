@@ -18,6 +18,11 @@
 package org.huahinframework.core.lib.input;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,6 +42,9 @@ import org.huahinframework.core.DataFormatException;
 import org.huahinframework.core.SimpleJob;
 import org.huahinframework.core.io.Key;
 import org.huahinframework.core.io.Value;
+import org.huahinframework.core.util.HDFSUtils;
+import org.huahinframework.core.util.PathUtils;
+import org.huahinframework.core.util.S3Utils;
 import org.huahinframework.core.util.StringUtil;
 
 /**
@@ -55,8 +63,17 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
     private Key key = null;
     private Value value = null;
     private String[] labels;
+    private String[] masterLabels;
+    private boolean joinRegex;
+    private String masterColumn;
+    private String dataColumn;
+    private int masterJoinNo;
+    private int dataJoinNo;
     private String separator;
     private boolean formatIgnored;
+
+    private Map<String, String[]> simpleJoinMap;
+    private Map<Pattern, String[]> simpleJoinRegexMap;
 
     /**
      * {@inheritDoc}
@@ -96,10 +113,57 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
                         (int)Math.min((long)Integer.MAX_VALUE, end - start));
         }
 
+        Configuration conf = context.getConfiguration();
         this.pos = start;
-        this.formatIgnored = context.getConfiguration().getBoolean(SimpleJob.FORMAT_IGNORED, false);
-        this.labels = context.getConfiguration().getStrings(SimpleJob.LABELS);
-        this.separator = context.getConfiguration().get(SimpleJob.SEPARATOR, StringUtil.COMMA);
+        this.formatIgnored = conf.getBoolean(SimpleJob.FORMAT_IGNORED, false);
+        this.labels = conf.getStrings(SimpleJob.LABELS);
+        this.separator = conf.get(SimpleJob.SEPARATOR, StringUtil.COMMA);
+
+        masterColumn = conf.get(SimpleJob.SIMPLE_JOIN_MASTER_COLUMN);
+        dataColumn = conf.get(SimpleJob.SIMPLE_JOIN_DATA_COLUMN);
+        if (masterColumn != null) {
+            String masterPath = conf.get(SimpleJob.MASTER_PATH);
+            masterLabels = conf.getStrings(SimpleJob.MASTER_LABELS);
+            String masterSeparator = conf.get(SimpleJob.MASTER_SEPARATOR);
+            joinRegex = conf.getBoolean(SimpleJob.JOIN_REGEX, false);
+
+            PathUtils pathUtils = null;
+            if(conf.getBoolean(SimpleJob.ONPREMISE, false)) {
+                pathUtils = new HDFSUtils(conf);
+            } else {
+                pathUtils = new S3Utils(conf.get(SimpleJob.AWS_ACCESS_KEY),
+                                        conf.get(SimpleJob.AWS_SECRET_KEY));
+            }
+
+            for (int i = 0; i < masterLabels.length; i++) {
+                if (masterColumn.equals(masterLabels[i])) {
+                    masterJoinNo = i;
+                    break;
+                }
+            }
+
+            for (int i = 0; i < labels.length; i++) {
+                if (dataColumn.equals(labels[i])) {
+                    dataJoinNo = i;
+                    break;
+                }
+            }
+
+            try {
+                simpleJoinMap =
+                        pathUtils.getSimpleMaster(masterLabels, masterColumn, masterPath, masterSeparator);
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+
+            if (joinRegex) {
+                simpleJoinRegexMap = new HashMap<Pattern, String[]>();
+                for (Entry<String, String[]> entry : simpleJoinMap.entrySet()) {
+                    Pattern p = Pattern.compile(entry.getKey());
+                    simpleJoinRegexMap.put(p, entry.getValue());
+                }
+            }
+        }
     }
 
     /**
@@ -135,8 +199,39 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
                     }
                 }
 
-                for (int i = 0; i < strings.length; i++) {
-                    value.addPrimitiveValue(labels[i], strings[i]);
+                if (simpleJoinMap != null) {
+                    for (int i = 0; i < strings.length; i++) {
+                        value.addPrimitiveValue(labels[i], strings[i]);
+                        if (i == dataJoinNo) {
+                            if (joinRegex) {
+                                for (Entry<Pattern, String[]> entry : simpleJoinRegexMap.entrySet()) {
+                                    Pattern p = entry.getKey();
+                                    if (p.matcher(strings[i]).matches()) {
+                                        String[] masters = entry.getValue();
+                                        for (int j = 0; j < masterLabels.length; j++) {
+                                            value.addPrimitiveValue(masterLabels[j], masters[j]);
+                                            if (j != masterJoinNo) {
+                                                value.addPrimitiveValue(masterLabels[j], masters[j]);
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                String[] masters = simpleJoinMap.get(strings[i]);
+                                if (masters != null) {
+                                    for (int j = 0; j < masterLabels.length; j++) {
+                                        if (j != masterJoinNo) {
+                                            value.addPrimitiveValue(masterLabels[j], masters[j]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < strings.length; i++) {
+                        value.addPrimitiveValue(labels[i], strings[i]);
+                    }
                 }
             } else {
                 for (int i = 0; i < strings.length; i++) {

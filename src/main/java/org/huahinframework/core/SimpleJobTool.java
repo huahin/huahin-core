@@ -33,6 +33,7 @@ import org.apache.hadoop.util.Tool;
 import org.huahinframework.core.lib.input.SimpleTextInputFormat;
 import org.huahinframework.core.util.HDFSUtils;
 import org.huahinframework.core.util.PathUtils;
+import org.huahinframework.core.util.S3Utils;
 import org.huahinframework.core.util.StringUtil;
 
 /**
@@ -88,6 +89,11 @@ public abstract class SimpleJobTool extends Configured implements Tool {
     protected Configuration conf;
 
     /**
+     * input args
+     */
+    private String[] args;
+
+    /**
      * input path
      */
     protected String input;
@@ -124,9 +130,10 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      */
     @Override
     public int run(String[] args) throws Exception {
-        conf = getConf();
-        pathUtils = new HDFSUtils(conf);
-        jobName = StringUtil.createInternalJobID();
+        this.args = args;
+        this.conf = getConf();
+        this.pathUtils = new HDFSUtils(conf);
+        this.jobName = StringUtil.createInternalJobID();
 
         input = setInputPath(args);
         output = setOutputPath(args);
@@ -192,6 +199,14 @@ public abstract class SimpleJobTool extends Configured implements Tool {
         }
 
         return results.isAllJobSuccessful() ? 0 : -1;
+    }
+
+    /**
+     * Get input args
+     * @return input args
+     */
+    protected String[] getArgs() {
+        return args;
     }
 
     /**
@@ -281,6 +296,14 @@ public abstract class SimpleJobTool extends Configured implements Tool {
 
         if (separator != null) {
             job.getConfiguration().set(SimpleJob.SEPARATOR, separator);
+        }
+
+        if (pathUtils instanceof HDFSUtils) {
+            job.getConfiguration().setBoolean(SimpleJob.ONPREMISE, true);
+        } else if(pathUtils instanceof S3Utils) {
+            S3Utils u = (S3Utils) pathUtils;
+            job.getConfiguration().set(SimpleJob.AWS_ACCESS_KEY, u.getAccessKey());
+            job.getConfiguration().set(SimpleJob.AWS_SECRET_KEY, u.getSecretKey());
         }
 
         job.setJarByClass(SimpleJobTool.class);
