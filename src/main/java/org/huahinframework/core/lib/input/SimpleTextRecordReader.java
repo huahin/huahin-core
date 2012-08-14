@@ -38,10 +38,14 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.util.LineReader;
-import org.huahinframework.core.DataFormatException;
 import org.huahinframework.core.SimpleJob;
 import org.huahinframework.core.io.Key;
 import org.huahinframework.core.io.Value;
+import org.huahinframework.core.lib.input.creator.JoinRegexValueCreator;
+import org.huahinframework.core.lib.input.creator.JoinValueCreator;
+import org.huahinframework.core.lib.input.creator.LabelValueCreator;
+import org.huahinframework.core.lib.input.creator.SimpleValueCreator;
+import org.huahinframework.core.lib.input.creator.ValueCreator;
 import org.huahinframework.core.util.HDFSUtils;
 import org.huahinframework.core.util.PathUtils;
 import org.huahinframework.core.util.S3Utils;
@@ -62,18 +66,9 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
     private Text text = new Text();
     private Key key = null;
     private Value value = null;
-    private String[] labels;
-    private String[] masterLabels;
-    private boolean joinRegex;
-    private String masterColumn;
-    private String dataColumn;
-    private int masterJoinNo;
-    private int dataJoinNo;
     private String separator;
-    private boolean formatIgnored;
 
-    private Map<String, String[]> simpleJoinMap;
-    private Map<Pattern, String[]> simpleJoinRegexMap;
+    private ValueCreator valueCreator;
 
     /**
      * {@inheritDoc}
@@ -115,55 +110,71 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
 
         Configuration conf = context.getConfiguration();
         this.pos = start;
-        this.formatIgnored = conf.getBoolean(SimpleJob.FORMAT_IGNORED, false);
-        this.labels = conf.getStrings(SimpleJob.LABELS);
         this.separator = conf.get(SimpleJob.SEPARATOR, StringUtil.COMMA);
 
-        masterColumn = conf.get(SimpleJob.SIMPLE_JOIN_MASTER_COLUMN);
-        dataColumn = conf.get(SimpleJob.SIMPLE_JOIN_DATA_COLUMN);
-        if (masterColumn != null) {
-            String masterPath = conf.get(SimpleJob.MASTER_PATH);
-            masterLabels = conf.getStrings(SimpleJob.MASTER_LABELS);
-            String masterSeparator = conf.get(SimpleJob.MASTER_SEPARATOR);
-            joinRegex = conf.getBoolean(SimpleJob.JOIN_REGEX, false);
+        // make valu creator
+        String[] labels = conf.getStrings(SimpleJob.LABELS);
+        if (labels == null) {
+            valueCreator = new SimpleValueCreator();
+        } else {
+            boolean formatIgnored = conf.getBoolean(SimpleJob.FORMAT_IGNORED, false);
+            String masterColumn = conf.get(SimpleJob.SIMPLE_JOIN_MASTER_COLUMN);
+            if (masterColumn == null) {
+                valueCreator = new LabelValueCreator(labels, formatIgnored);
+            }else {
+                String masterPath = conf.get(SimpleJob.MASTER_PATH);
+                String[] masterLabels = conf.getStrings(SimpleJob.MASTER_LABELS);
+                String masterSeparator = conf.get(SimpleJob.MASTER_SEPARATOR);
+                boolean joinRegex = conf.getBoolean(SimpleJob.JOIN_REGEX, false);
 
-            PathUtils pathUtils = null;
-            if(conf.getBoolean(SimpleJob.ONPREMISE, false)) {
-                pathUtils = new HDFSUtils(conf);
-            } else {
-                pathUtils = new S3Utils(conf.get(SimpleJob.AWS_ACCESS_KEY),
-                                        conf.get(SimpleJob.AWS_SECRET_KEY));
-            }
-
-            for (int i = 0; i < masterLabels.length; i++) {
-                if (masterColumn.equals(masterLabels[i])) {
-                    masterJoinNo = i;
-                    break;
+                PathUtils pathUtils = null;
+                if(conf.getBoolean(SimpleJob.ONPREMISE, false)) {
+                    pathUtils = new HDFSUtils(conf);
+                } else {
+                    pathUtils = new S3Utils(conf.get(SimpleJob.AWS_ACCESS_KEY),
+                                            conf.get(SimpleJob.AWS_SECRET_KEY));
                 }
-            }
 
-            for (int i = 0; i < labels.length; i++) {
-                if (dataColumn.equals(labels[i])) {
-                    dataJoinNo = i;
-                    break;
-                }
-            }
+                int masterJoinNo = getJoinNo(masterLabels, masterColumn);
+                int dataJoinNo = getJoinNo(labels, conf.get(SimpleJob.SIMPLE_JOIN_DATA_COLUMN));
 
-            try {
-                simpleJoinMap =
-                        pathUtils.getSimpleMaster(masterLabels, masterColumn, masterPath, masterSeparator);
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-
-            if (joinRegex) {
-                simpleJoinRegexMap = new HashMap<Pattern, String[]>();
-                for (Entry<String, String[]> entry : simpleJoinMap.entrySet()) {
-                    Pattern p = Pattern.compile(entry.getKey());
-                    simpleJoinRegexMap.put(p, entry.getValue());
+                Map<String, String[]> simpleJoinMap = null;
+                try {
+                    simpleJoinMap =
+                            pathUtils.getSimpleMaster(masterLabels, masterColumn, masterPath, masterSeparator);
+                    if (joinRegex) {
+                        Map<Pattern, String[]> simpleJoinRegexMap = new HashMap<Pattern, String[]>();
+                        for (Entry<String, String[]> entry : simpleJoinMap.entrySet()) {
+                            Pattern p = Pattern.compile(entry.getKey());
+                            simpleJoinRegexMap.put(p, entry.getValue());
+                        }
+                        valueCreator =
+                                new JoinRegexValueCreator(labels, formatIgnored, masterLabels,
+                                                         masterJoinNo, dataJoinNo, simpleJoinRegexMap);
+                    } else {
+                        valueCreator = new JoinValueCreator(labels, formatIgnored, masterLabels,
+                                                            masterJoinNo, dataJoinNo, simpleJoinMap);
+                    }
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
                 }
             }
         }
+    }
+
+    /**
+     * get join column number
+     * @param labels label's
+     * @param join join column
+     * @return join column number
+     */
+    private int getJoinNo(String[] labels, String join) {
+        for (int i = 0; i < labels.length; i++) {
+            if (join.equals(labels[i])) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -190,54 +201,7 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
             }
 
             String[] strings = StringUtil.split(text.toString(), separator, false);
-            if (labels != null) {
-                if (labels.length != strings.length) {
-                    if (formatIgnored) {
-                        throw new DataFormatException("input format error: " +
-                                                      "label.length = " + labels.length +
-                                                      "input.lenght = " + strings.length);
-                    }
-                }
-
-                if (simpleJoinMap != null) {
-                    for (int i = 0; i < strings.length; i++) {
-                        value.addPrimitiveValue(labels[i], strings[i]);
-                        if (i == dataJoinNo) {
-                            if (joinRegex) {
-                                for (Entry<Pattern, String[]> entry : simpleJoinRegexMap.entrySet()) {
-                                    Pattern p = entry.getKey();
-                                    if (p.matcher(strings[i]).matches()) {
-                                        String[] masters = entry.getValue();
-                                        for (int j = 0; j < masterLabels.length; j++) {
-                                            value.addPrimitiveValue(masterLabels[j], masters[j]);
-                                            if (j != masterJoinNo) {
-                                                value.addPrimitiveValue(masterLabels[j], masters[j]);
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                String[] masters = simpleJoinMap.get(strings[i]);
-                                if (masters != null) {
-                                    for (int j = 0; j < masterLabels.length; j++) {
-                                        if (j != masterJoinNo) {
-                                            value.addPrimitiveValue(masterLabels[j], masters[j]);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    for (int i = 0; i < strings.length; i++) {
-                        value.addPrimitiveValue(labels[i], strings[i]);
-                    }
-                }
-            } else {
-                for (int i = 0; i < strings.length; i++) {
-                    value.addPrimitiveValue(String.valueOf(i), strings[i]);
-                }
-            }
+            valueCreator.create(strings, value);
 
             pos += newSize;
             if (newSize < maxLineLength) {

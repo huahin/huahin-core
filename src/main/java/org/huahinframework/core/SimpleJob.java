@@ -211,7 +211,8 @@ public class SimpleJob extends Job {
     }
 
     /**
-     * TODO: Detail of SimpleJoin.
+     * Easily supports the Join. To use the setSimpleJoin,
+     * you must be a size master data appear in the memory of the task.
      * @param masterLabels label of master data
      * @param mColumn master column
      * @param dColumn data column
@@ -226,7 +227,8 @@ public class SimpleJob extends Job {
     }
 
     /**
-     * TODO: Detail of SimpleJoin.
+     * Easily supports the Join. To use the setSimpleJoin,
+     * you must be a size master data appear in the memory of the task.
      * @param masterLabels label of master data
      * @param mColumn master column
      * @param dColumn data column
@@ -242,7 +244,8 @@ public class SimpleJob extends Job {
     }
 
     /**
-     * TODO: Detail of SimpleJoin.
+     * Easily supports the Join. To use the setSimpleJoin,
+     * you must be a size master data appear in the memory of the task.
      * @param masterLabels label of master data
      * @param mColumn master column
      * @param dColumn data column
