@@ -36,13 +36,13 @@ public interface PathUtils {
     /**
      * create simple master data
      * @param masterLabels master labels
-     * @param joinColumn column for join
+     * @param joinColumnNo column number for join
      * @param path master path
      * @param separator data separator
      * @return master master data. Dose not exist is null.
      * @throws IOException
      */
-    public Map<String, String[]> getSimpleMaster(String[] masterLabels, String joinColumn,
+    public Map<String, String[]> getSimpleMaster(String[] masterLabels, int joinColumnNo,
                                                  String path, String separator)
                                                          throws IOException, URISyntaxException;
 }

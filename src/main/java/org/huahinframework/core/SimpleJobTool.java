@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -304,6 +305,11 @@ public abstract class SimpleJobTool extends Configured implements Tool {
             S3Utils u = (S3Utils) pathUtils;
             job.getConfiguration().set(SimpleJob.AWS_ACCESS_KEY, u.getAccessKey());
             job.getConfiguration().set(SimpleJob.AWS_SECRET_KEY, u.getSecretKey());
+
+            if (sequencalJobChain.isEmpty()) {
+                FileInputFormat.setMinInputSplitSize(job, 134217728);
+                FileInputFormat.setMaxInputSplitSize(job, 134217728);
+            }
         }
 
         job.setJarByClass(SimpleJobTool.class);

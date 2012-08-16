@@ -1,3 +1,6 @@
+0.1.2
+ * add: Easily supports the Join. However, you must be a size master data appear in the memory of the task.
+
 0.1.1
  * update: Performance improvement.
  * update: Combiner supported. If you specified a Combiner, In-Mapper Combiner is set automatically.

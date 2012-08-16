@@ -62,7 +62,7 @@ public class HDFSUtils implements PathUtils {
      */
     @Override
     public Map<String, String[]> getSimpleMaster(String[] masterLabels,
-                                                 String joinColumn,
+                                                 int joinColumnNo,
                                                  String path,
                                                  String separator) throws IOException {
         Map<String, String[]> m = new HashMap<String, String[]>();
@@ -71,14 +71,6 @@ public class HDFSUtils implements PathUtils {
         FileStatus fstatus = fs.getFileStatus(new Path(path));
         if (fstatus == null) {
             return null;
-        }
-
-        int joinNo = 0;
-        for (int i = 0; i < masterLabels.length; i++) {
-            if (joinColumn.equals(masterLabels[i])) {
-                joinNo = i;
-                break;
-            }
         }
 
         BufferedReader br =
@@ -91,7 +83,7 @@ public class HDFSUtils implements PathUtils {
                 continue;
             }
 
-            String joinData = strings[joinNo];
+            String joinData = strings[joinColumnNo];
             String[] data = new String[strings.length];
             for (int i = 0; i < strings.length; i++) {
                 data[i] = strings[i];

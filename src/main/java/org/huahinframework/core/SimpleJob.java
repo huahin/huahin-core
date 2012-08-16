@@ -214,15 +214,15 @@ public class SimpleJob extends Job {
      * Easily supports the Join. To use the setSimpleJoin,
      * you must be a size master data appear in the memory of the task.
      * @param masterLabels label of master data
-     * @param mColumn master column
-     * @param dColumn data column
+     * @param masterColumn master column
+     * @param dataColumn data column
      * @param masterPath master data HDFS path
      * @return this
      */
-    public SimpleJob setSimpleJoin(String[] masterLabels, String mColumn, String dColumn,
-                                   String masterPath) {
+    public SimpleJob setSimpleJoin(String[] masterLabels, String masterColumn,
+                                   String dataColumn, String masterPath) {
         String separator = conf.get(SEPARATOR);
-        setSimpleJoin(masterLabels, mColumn, dColumn, masterPath, separator, false);
+        setSimpleJoin(masterLabels, masterColumn, dataColumn, masterPath, separator, false);
         return this;
     }
 
@@ -230,16 +230,16 @@ public class SimpleJob extends Job {
      * Easily supports the Join. To use the setSimpleJoin,
      * you must be a size master data appear in the memory of the task.
      * @param masterLabels label of master data
-     * @param mColumn master column
-     * @param dColumn data column
+     * @param masterColumn master column
+     * @param dataColumn data column
      * @param masterPath master data HDFS path
      * @param regex master join is regex;
      * @return this
      */
-    public SimpleJob setSimpleJoin(String[] masterLabels, String mColumn, String dColumn,
+    public SimpleJob setSimpleJoin(String[] masterLabels, String masterColumn, String dataColumn,
                                    String masterPath, boolean regex) {
         String separator = conf.get(SEPARATOR);
-        setSimpleJoin(masterLabels, mColumn, dColumn, masterPath, separator, regex);
+        setSimpleJoin(masterLabels, masterColumn, dataColumn, masterPath, separator, regex);
         return this;
     }
 
@@ -247,18 +247,18 @@ public class SimpleJob extends Job {
      * Easily supports the Join. To use the setSimpleJoin,
      * you must be a size master data appear in the memory of the task.
      * @param masterLabels label of master data
-     * @param mColumn master column
-     * @param dColumn data column
+     * @param masterColumn master column
+     * @param dataColumn data column
      * @param masterPath master data HDFS path
      * @param separator separator
-     * @param regex master join is regex;
+     * @param regex master join is regex
      * @return this
      */
-    public SimpleJob setSimpleJoin(String[] masterLabels, String mColumn, String dColumn,
+    public SimpleJob setSimpleJoin(String[] masterLabels, String masterColumn, String dataColumn,
                                    String masterPath, String separator, boolean regex) {
         conf.setStrings(MASTER_LABELS, masterLabels);
-        conf.set(SIMPLE_JOIN_MASTER_COLUMN, mColumn);
-        conf.set(SIMPLE_JOIN_DATA_COLUMN, dColumn);
+        conf.set(SIMPLE_JOIN_MASTER_COLUMN, masterColumn);
+        conf.set(SIMPLE_JOIN_DATA_COLUMN, dataColumn);
         conf.set(MASTER_PATH, masterPath);
         conf.set(MASTER_SEPARATOR, separator);
         conf.setBoolean(JOIN_REGEX, regex);

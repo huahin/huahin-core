@@ -84,12 +84,10 @@ public class S3Utils implements PathUtils {
 
     /**
      * {@inheritDoc}
-     * @throws IOException
-     * @throws URISyntaxException
      */
     @Override
     public Map<String, String[]> getSimpleMaster(String[] masterLabels,
-                                                 String joinColumn,
+                                                 int joinColumnNo,
                                                  String path,
                                                  String separator) throws IOException, URISyntaxException {
         Map<String, String[]> m = new HashMap<String, String[]>();
@@ -97,14 +95,6 @@ public class S3Utils implements PathUtils {
         URI uri = new URI(path);
         String key = uri.getPath().substring(1);
         S3Object s3Object = s3.getObject(uri.getHost(), key);
-
-        int joinNo = 0;
-        for (int i = 0; i < masterLabels.length; i++) {
-            if (joinColumn.equals(masterLabels[i])) {
-                joinNo = i;
-                break;
-            }
-        }
 
         BufferedReader br =
                 new BufferedReader(new InputStreamReader(s3Object.getObjectContent(), "UTF-8"));
@@ -116,7 +106,7 @@ public class S3Utils implements PathUtils {
                 continue;
             }
 
-            String joinData = strings[joinNo];
+            String joinData = strings[joinColumnNo];
             String[] data = new String[strings.length];
             for (int i = 0; i < strings.length; i++) {
                 data[i] = strings[i];

@@ -141,7 +141,7 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
                 Map<String, String[]> simpleJoinMap = null;
                 try {
                     simpleJoinMap =
-                            pathUtils.getSimpleMaster(masterLabels, masterColumn, masterPath, masterSeparator);
+                            pathUtils.getSimpleMaster(masterLabels, masterJoinNo, masterPath, masterSeparator);
                     if (joinRegex) {
                         Map<Pattern, String[]> simpleJoinRegexMap = new HashMap<Pattern, String[]>();
                         for (Entry<String, String[]> entry : simpleJoinMap.entrySet()) {
