@@ -88,4 +88,34 @@ public class OptionUtilTest {
             assertEquals(s[i], reArgs[i]);
         }
     }
+
+    @Test
+    public void testOtherExceptionArgs() throws ParseException {
+        final String[] args = { "-p", "AAAA", "apacheFormatting", "input", "output", "1,4,6" };
+        final String[] reArgs = { "-p", "AAAA", "apacheFormatting", "input", "output", "1,4,6" };
+
+        OptionUtil opt = new OptionUtil(args);
+        String[] s = opt.getArgs();
+
+        assertEquals(s.length, reArgs.length);
+
+        for (int i = 0; i < reArgs.length; i++) {
+            assertEquals(s[i], reArgs[i]);
+        }
+    }
+
+    @Test
+    public void testOtherException2Args() throws ParseException {
+        final String[] args = { "-l", "-t", "4", "-s", "5", "-p", "AAAA", "apacheFormatting", "input", "output", "1,4,6" };
+        final String[] reArgs = { "-p", "AAAA", "apacheFormatting", "input", "output", "1,4,6" };
+
+        OptionUtil opt = new OptionUtil(args);
+        String[] s = opt.getArgs();
+
+        assertEquals(s.length, reArgs.length);
+
+        for (int i = 0; i < reArgs.length; i++) {
+            assertEquals(s[i], reArgs[i]);
+        }
+    }
 }

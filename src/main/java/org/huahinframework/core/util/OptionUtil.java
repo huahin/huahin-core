@@ -73,7 +73,7 @@ public class OptionUtil {
         options.addOption(JOB_NAME, true, "job name");
 
         CommandLineParser parser = new BasicParser();
-        cli = parser.parse(options, args);
+        cli = parser.parse(options, args, true);
     }
 
     /**
