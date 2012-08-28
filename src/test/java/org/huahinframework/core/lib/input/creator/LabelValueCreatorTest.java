@@ -28,14 +28,14 @@ import org.junit.Test;
  */
 public class LabelValueCreatorTest {
     @Test
-    public void test() throws DataFormatException {
+    public void testString() throws DataFormatException {
         String[] labels = { "AAA", "BBB", "CCC", "DDD" };
 
-        ValueCreator valueCreator = new LabelValueCreator(labels, false);
+        ValueCreator valueCreator = new LabelValueCreator(labels, false, "\t", false);
         Value value = new Value();
 
-        String[] strings1 = { "a", "b", "c", "d" };
-        valueCreator.create(strings1, value);
+        String string1 = "a\tb\tc\td";
+        valueCreator.create(string1, value);
         assertEquals(value.getPrimitiveValue("AAA"), "a");
         assertEquals(value.getPrimitiveValue("BBB"), "b");
         assertEquals(value.getPrimitiveValue("CCC"), "c");
@@ -43,8 +43,33 @@ public class LabelValueCreatorTest {
         assertEquals(value.getPrimitiveValue("EEE"), null);
 
         value.clear();
-        String[] strings2 = { "1", "2", "3", "4" };
-        valueCreator.create(strings2, value);
+        String string2 = "1\t2\t3\t4";
+        valueCreator.create(string2, value);
+        assertEquals(value.getPrimitiveValue("AAA"), "1");
+        assertEquals(value.getPrimitiveValue("BBB"), "2");
+        assertEquals(value.getPrimitiveValue("CCC"), "3");
+        assertEquals(value.getPrimitiveValue("DDD"), "4");
+        assertEquals(value.getPrimitiveValue("EEE"), null);
+    }
+
+    @Test
+    public void testRegex() throws DataFormatException {
+        String[] labels = { "AAA", "BBB", "CCC", "DDD" };
+
+        ValueCreator valueCreator = new LabelValueCreator(labels, false, "^(.*)\\t(.*)\\t(.*)\\t(.*)$", true);
+        Value value = new Value();
+
+        String string1 = "a\tb\tc\td";
+        valueCreator.create(string1, value);
+        assertEquals(value.getPrimitiveValue("AAA"), "a");
+        assertEquals(value.getPrimitiveValue("BBB"), "b");
+        assertEquals(value.getPrimitiveValue("CCC"), "c");
+        assertEquals(value.getPrimitiveValue("DDD"), "d");
+        assertEquals(value.getPrimitiveValue("EEE"), null);
+
+        value.clear();
+        String string2 = "1\t2\t3\t4";
+        valueCreator.create(string2, value);
         assertEquals(value.getPrimitiveValue("AAA"), "1");
         assertEquals(value.getPrimitiveValue("BBB"), "2");
         assertEquals(value.getPrimitiveValue("CCC"), "3");

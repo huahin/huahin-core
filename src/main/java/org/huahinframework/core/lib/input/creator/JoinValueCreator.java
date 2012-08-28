@@ -36,6 +36,8 @@ public class JoinValueCreator extends ValueCreator {
      * @param formatIgnored
      * If true, {@link DataFormatException} will be throw if there is a format error.
      * If false is ignored (default).
+     * @param separator separator
+     * @param regex If true, value is regex.
      * @param masterLabels label of master data
      * @param masterJoinNo master join column number
      * @param dataJoinNo data join column number
@@ -43,11 +45,13 @@ public class JoinValueCreator extends ValueCreator {
      */
     public JoinValueCreator(String[] labels,
                             boolean formatIgnored,
+                            String separator,
+                            boolean regex,
                             String[] masterLabels,
                             int masterJoinNo,
                             int dataJoinNo,
                             Map<String, String[]> simpleJoinMap) {
-        super(labels, formatIgnored);
+        super(labels, formatIgnored, separator, regex);
         this.masterLabels = masterLabels;
         this.masterJoinNo = masterJoinNo;
         this.dataJoinNo = dataJoinNo;

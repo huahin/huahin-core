@@ -111,16 +111,17 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
         Configuration conf = context.getConfiguration();
         this.pos = start;
         this.separator = conf.get(SimpleJob.SEPARATOR, StringUtil.COMMA);
+        boolean regex = conf.getBoolean(SimpleJob.SEPARATOR_REGEX, false);
 
         // make valu creator
         String[] labels = conf.getStrings(SimpleJob.LABELS);
         if (labels == null) {
-            valueCreator = new SimpleValueCreator();
+            valueCreator = new SimpleValueCreator(separator, regex);
         } else {
             boolean formatIgnored = conf.getBoolean(SimpleJob.FORMAT_IGNORED, false);
             String masterColumn = conf.get(SimpleJob.SIMPLE_JOIN_MASTER_COLUMN);
             if (masterColumn == null) {
-                valueCreator = new LabelValueCreator(labels, formatIgnored);
+                valueCreator = new LabelValueCreator(labels, formatIgnored, separator, regex);
             }else {
                 String masterPath = conf.get(SimpleJob.MASTER_PATH);
                 String[] masterLabels = conf.getStrings(SimpleJob.MASTER_LABELS);
@@ -149,10 +150,10 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
                             simpleJoinRegexMap.put(p, entry.getValue());
                         }
                         valueCreator =
-                                new JoinRegexValueCreator(labels, formatIgnored, masterLabels,
+                                new JoinRegexValueCreator(labels, formatIgnored, separator, regex, masterLabels,
                                                          masterJoinNo, dataJoinNo, simpleJoinRegexMap);
                     } else {
-                        valueCreator = new JoinValueCreator(labels, formatIgnored, masterLabels,
+                        valueCreator = new JoinValueCreator(labels, formatIgnored, separator, regex, masterLabels,
                                                             masterJoinNo, dataJoinNo, simpleJoinMap);
                     }
                 } catch (URISyntaxException e) {
@@ -200,8 +201,7 @@ public class SimpleTextRecordReader extends RecordReader<Key, Value> {
                 break;
             }
 
-            String[] strings = StringUtil.split(text.toString(), separator, false);
-            valueCreator.create(strings, value);
+            valueCreator.create(text.toString(), value);
 
             pos += newSize;
             if (newSize < maxLineLength) {

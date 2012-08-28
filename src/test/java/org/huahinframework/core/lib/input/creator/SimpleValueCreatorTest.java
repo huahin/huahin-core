@@ -28,12 +28,12 @@ import org.junit.Test;
  */
 public class SimpleValueCreatorTest {
     @Test
-    public void test() throws DataFormatException {
-        ValueCreator valueCreator = new SimpleValueCreator();
+    public void testString() throws DataFormatException {
+        ValueCreator valueCreator = new SimpleValueCreator("\t", false);
         Value value = new Value();
 
-        String[] strings1 = { "a", "b", "c", "d" };
-        valueCreator.create(strings1, value);
+        String string1 = "a\tb\tc\td";
+        valueCreator.create(string1, value);
         assertEquals(value.getPrimitiveValue("0"), "a");
         assertEquals(value.getPrimitiveValue("1"), "b");
         assertEquals(value.getPrimitiveValue("2"), "c");
@@ -41,8 +41,31 @@ public class SimpleValueCreatorTest {
         assertEquals(value.getPrimitiveValue("4"), null);
 
         value.clear();
-        String[] strings2 = { "1", "2", "3", "4" };
-        valueCreator.create(strings2, value);
+        String string2 = "1\t2\t3\t4";
+        valueCreator.create(string2, value);
+        assertEquals(value.getPrimitiveValue("0"), "1");
+        assertEquals(value.getPrimitiveValue("1"), "2");
+        assertEquals(value.getPrimitiveValue("2"), "3");
+        assertEquals(value.getPrimitiveValue("3"), "4");
+        assertEquals(value.getPrimitiveValue("4"), null);
+    }
+
+    @Test
+    public void testRegex() throws DataFormatException {
+        ValueCreator valueCreator = new SimpleValueCreator("^(.*)\\t(.*)\\t(.*)\\t(.*)$", true);
+        Value value = new Value();
+
+        String string1 = "a\tb\tc\td";
+        valueCreator.create(string1, value);
+        assertEquals(value.getPrimitiveValue("0"), "a");
+        assertEquals(value.getPrimitiveValue("1"), "b");
+        assertEquals(value.getPrimitiveValue("2"), "c");
+        assertEquals(value.getPrimitiveValue("3"), "d");
+        assertEquals(value.getPrimitiveValue("4"), null);
+
+        value.clear();
+        String string2 = "1\t2\t3\t4";
+        valueCreator.create(string2, value);
         assertEquals(value.getPrimitiveValue("0"), "1");
         assertEquals(value.getPrimitiveValue("1"), "2");
         assertEquals(value.getPrimitiveValue("2"), "3");

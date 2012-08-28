@@ -17,35 +17,37 @@
  */
 package org.huahinframework.core.lib.input.creator;
 
-import org.huahinframework.core.DataFormatException;
-import org.huahinframework.core.io.Value;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * This class creates a {@link Value} on the label
+ * Split by a regex String data.
  */
-public class LabelValueCreator extends ValueCreator {
+public class RegexSplitter implements Splitter {
+    private Pattern pattern;
+
     /**
-     * @param labels label of input data
-     * @param formatIgnored
-     * If true, {@link DataFormatException} will be throw if there is a format error.
-     * If false is ignored (default).
-     * @param separator separator
-     * @param regex If true, value is regex.
+     * @param separator separator is regex.
      */
-    public LabelValueCreator(String[] labels,
-                             boolean formatIgnored,
-                             String separator,
-                             boolean regex) {
-        super(labels, formatIgnored, separator, regex);
+    public RegexSplitter(String separator) {
+        this.pattern = Pattern.compile(separator);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void valueCreate(String[] strings, Value value) {
-        for (int i = 0; i < strings.length; i++) {
-            value.addPrimitiveValue(labels[i], strings[i]);
+    public String[] split(String str) {
+        Matcher matcher = pattern.matcher(str);
+
+        String[] strings = { "" };
+        if (matcher.matches()) {
+            int groupCount = matcher.groupCount();
+            strings = new String[groupCount];
+            for (int i = 1; i <= groupCount; i++) {
+                strings[i - 1] = matcher.group(i);
+            }
         }
+        return strings;
     }
 }

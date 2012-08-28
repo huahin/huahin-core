@@ -25,10 +25,11 @@ import org.huahinframework.core.io.Value;
  */
 public class SimpleValueCreator extends ValueCreator {
     /**
-     * default constractor
+     * @param separator separator
+     * @param regex If true, value is regex.
      */
-    public SimpleValueCreator() {
-        this(null, false);
+    public SimpleValueCreator(String separator, boolean regex) {
+        this(null, false, separator, regex);
     }
 
     /**
@@ -36,17 +37,23 @@ public class SimpleValueCreator extends ValueCreator {
      * @param formatIgnored
      * If true, {@link DataFormatException} will be throw if there is a format error.
      * If false is ignored (default).
+     * @param separator separator
+     * @param regex If true, value is regex.
      */
-    public SimpleValueCreator(String[] labels, boolean formatIgnored) {
-        super(labels, formatIgnored);
+    public SimpleValueCreator(String[] labels,
+                              boolean formatIgnored,
+                              String separator,
+                              boolean regex) {
+        super(labels, formatIgnored, separator, regex);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void create(String[] strings, Value value)
+    public void create(String string, Value value)
             throws DataFormatException {
+        String[] strings = splitter.split(string);
         for (int i = 0; i < strings.length; i++) {
             value.addPrimitiveValue(String.valueOf(i), strings[i]);
         }

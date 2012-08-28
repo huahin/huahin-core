@@ -41,6 +41,7 @@ public class SimpleJob extends Job {
     public static final String SIMPLE_JOIN_MASTER_COLUMN = "SIMPLE_JOIN_MASTER_COLUMN";
     public static final String SIMPLE_JOIN_DATA_COLUMN = "SIMPLE_JOIN_DATA_COLUMN";
     public static final String SEPARATOR = "SEPARATOR";
+    public static final String SEPARATOR_REGEX = "SEPARATOR_REGEX";
     public static final String MASTER_SEPARATOR = "MASTER_SEPARATOR";
     public static final String FORMAT_IGNORED = "FORMAT_IGNORED";
     public static final String COMBINE_CACHE = "COMBINE_CACHE";
@@ -270,7 +271,7 @@ public class SimpleJob extends Job {
      * @param formatIgnored Whether to ignore the format
      */
     public void setFormatIgnored(boolean formatIgnored) {
-        getConfiguration().setBoolean(FORMAT_IGNORED, formatIgnored);
+        conf.setBoolean(FORMAT_IGNORED, formatIgnored);
     }
 
     /**
@@ -287,6 +288,15 @@ public class SimpleJob extends Job {
      * @param name parameter name
      * @param value boolean parameter value
      */
+    public void setParameter(String name, String[] value) {
+        conf.setStrings(name, value);
+    }
+
+    /**
+     * Job parameter setting
+     * @param name parameter name
+     * @param value @link String} array parameter value
+     */
     public void setParameter(String name, boolean value) {
         conf.setBoolean(name, value);
     }
@@ -298,6 +308,34 @@ public class SimpleJob extends Job {
      */
     public void setParameter(String name, int value) {
         conf.setInt(name, value);
+    }
+
+    /**
+     * Job parameter setting.
+     * @param name parameter name
+     * @param value long parameter value
+     */
+    public void setParameter(String name, long value) {
+        conf.setLong(name, value);
+    }
+
+    /**
+     * Job parameter setting.
+     * @param name parameter name
+     * @param value float parameter value
+     */
+    public void setParameter(String name, float value) {
+        conf.setFloat(name, value);
+    }
+
+    /**
+     * Job parameter setting.
+     * @param name parameter name
+     * @param value Enum parameter value
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void setParameter(String name, Enum value) {
+        conf.setEnum(name, value);
     }
 
     /**

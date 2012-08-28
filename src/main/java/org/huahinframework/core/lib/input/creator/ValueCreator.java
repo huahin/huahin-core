@@ -26,26 +26,40 @@ import org.huahinframework.core.io.Value;
 public abstract class ValueCreator {
     protected String[] labels;
     protected boolean formatIgnored;
+    protected Splitter splitter;
 
     /**
      * @param labels label of input data
      * @param formatIgnored
      * If true, {@link DataFormatException} will be throw if there is a format error.
      * If false is ignored (default).
+     * @param separator separator
+     * @param regex If true, value is regex.
      */
-    public ValueCreator(String[] labels, boolean formatIgnored) {
+    public ValueCreator(String[] labels,
+                        boolean formatIgnored,
+                        String separator,
+                        boolean regex) {
         this.labels = labels;
         this.formatIgnored = formatIgnored;
+
+        if (regex) {
+            splitter = new RegexSplitter(separator);
+        } else {
+            splitter = new StringSplitter(separator);
+        }
     }
 
     /**
      * From the input data to create a {@link Value}}
-     * @param strings
+     * @param string
      * @param value
      * @throws DataFormatException
      */
-    public void create(String[] strings, Value value)
+    public void create(String string, Value value)
             throws DataFormatException {
+        String[] strings = splitter.split(string);
+
         if (labels.length != strings.length) {
             if (formatIgnored) {
                 throw new DataFormatException("input format error: " +

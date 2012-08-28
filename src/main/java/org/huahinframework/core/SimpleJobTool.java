@@ -20,6 +20,7 @@ package org.huahinframework.core;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -33,6 +34,8 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.huahinframework.core.lib.input.SimpleTextInputFormat;
 import org.huahinframework.core.util.HDFSUtils;
+import org.huahinframework.core.util.LocalPathUtils;
+import org.huahinframework.core.util.OptionUtil;
 import org.huahinframework.core.util.PathUtils;
 import org.huahinframework.core.util.S3Utils;
 import org.huahinframework.core.util.StringUtil;
@@ -90,6 +93,11 @@ public abstract class SimpleJobTool extends Configured implements Tool {
     protected Configuration conf;
 
     /**
+     * {@link OptionUtil}
+     */
+    protected OptionUtil opt;
+
+    /**
      * input args
      */
     private String[] args;
@@ -131,13 +139,20 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      */
     @Override
     public int run(String[] args) throws Exception {
-        this.args = args;
+        this.opt = new OptionUtil(args);
+        this.args = opt.getArgs();
+
         this.conf = getConf();
-        this.pathUtils = new HDFSUtils(conf);
+        if (opt.isLocalMode()) {
+            this.pathUtils = new LocalPathUtils();
+        } else {
+            this.pathUtils = new HDFSUtils(conf);
+        }
+
         this.jobName = StringUtil.createInternalJobID();
 
-        input = setInputPath(args);
-        output = setOutputPath(args);
+        input = setInputPath(this.args);
+        output = setOutputPath(this.args);
         setup();
 
         // Make the intermediate path
@@ -207,7 +222,7 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      * @return input args
      */
     protected String[] getArgs() {
-        return args;
+        return this.args;
     }
 
     /**
@@ -235,7 +250,7 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      * @throws IOException
      */
     protected SimpleJob addJob() throws IOException {
-        return addJob(new SimpleJob(conf, jobName), null, null, false);
+        return addJob(new SimpleJob(conf, jobName), null, null, false, false);
     }
 
     /**
@@ -244,7 +259,7 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      * @throws IOException
      */
     protected SimpleJob addJob(boolean natural) throws IOException {
-        return addJob(new SimpleJob(conf, jobName, natural), null, null, false);
+        return addJob(new SimpleJob(conf, jobName, natural), null, null, false, false);
     }
 
     /**
@@ -254,7 +269,17 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      * @throws IOException
      */
     protected SimpleJob addJob(String[] labels, String separator) throws IOException {
-        return addJob(new SimpleJob(conf, jobName), labels, separator, false);
+        return addJob(new SimpleJob(conf, jobName), labels, separator, false, false);
+    }
+
+    /**
+     * @param labels label of input data
+     * @param pattern data {@link Pattern}
+     * @return new {@link SimpleJob} class
+     * @throws IOException
+     */
+    protected SimpleJob addJob(String[] labels, Pattern pattern) throws IOException {
+        return addJob(new SimpleJob(conf, jobName), labels, pattern.pattern(), false, true);
     }
 
     /**
@@ -263,7 +288,16 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      * @throws IOException
      */
     protected SimpleJob addJob(String separator) throws IOException {
-        return addJob(new SimpleJob(conf, jobName), null, separator, false);
+        return addJob(new SimpleJob(conf, jobName), null, separator, false, false);
+    }
+
+    /**
+     * @param pattern data {@link Pattern}
+     * @return new {@link SimpleJob} class
+     * @throws IOException
+     */
+    protected SimpleJob addJob(Pattern pattern) throws IOException {
+        return addJob(new SimpleJob(conf, jobName), null, pattern.pattern(), false, true);
     }
 
     /**
@@ -276,7 +310,20 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      * @throws IOException
      */
     protected SimpleJob addJob(String[] labels, String separator, boolean formatIgnored) throws IOException {
-        return addJob(new SimpleJob(conf, jobName), labels, separator, formatIgnored);
+        return addJob(new SimpleJob(conf, jobName), labels, separator, formatIgnored, false);
+    }
+
+    /**
+     * @param labels label of input data
+     * @param pattern data {@link Pattern}
+     * @param formatIgnored
+     * If true, {@link DataFormatException} will be throw if there is a format error.
+     * If false is ignored (default).
+     * @return new {@link SimpleJob} class
+     * @throws IOException
+     */
+    protected SimpleJob addJob(String[] labels, Pattern pattern, boolean formatIgnored) throws IOException {
+        return addJob(new SimpleJob(conf, jobName), labels, pattern.pattern(), formatIgnored, true);
     }
 
     /**
@@ -286,17 +333,25 @@ public abstract class SimpleJobTool extends Configured implements Tool {
      * @param formatIgnored
      * If true, {@link DataFormatException} will be throw if there is a format error.
      * If false is ignored (default).
+     * @param regex If true, value is regex
      * @return new {@link SimpleJob} class
      * @throws IOException
      */
-    protected SimpleJob addJob(SimpleJob job, String[] labels,
-                               String separator, boolean formatIgnored) throws IOException {
+    protected SimpleJob addJob(SimpleJob job,
+                               String[] labels,
+                               String separator,
+                               boolean formatIgnored,
+                               boolean regex) throws IOException {
         if (labels != null) {
             job.getConfiguration().setStrings(SimpleJob.LABELS, labels);
         }
 
         if (separator != null) {
             job.getConfiguration().set(SimpleJob.SEPARATOR, separator);
+        }
+
+        if (regex) {
+            job.getConfiguration().setBoolean(SimpleJob.SEPARATOR_REGEX, true);
         }
 
         if (pathUtils instanceof HDFSUtils) {

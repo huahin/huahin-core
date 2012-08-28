@@ -17,35 +17,26 @@
  */
 package org.huahinframework.core.lib.input.creator;
 
-import org.huahinframework.core.DataFormatException;
-import org.huahinframework.core.io.Value;
+import org.huahinframework.core.util.StringUtil;
 
 /**
- * This class creates a {@link Value} on the label
+ * Split by a separator String data.
  */
-public class LabelValueCreator extends ValueCreator {
+public class StringSplitter implements Splitter {
+    private String separator;
+
     /**
-     * @param labels label of input data
-     * @param formatIgnored
-     * If true, {@link DataFormatException} will be throw if there is a format error.
-     * If false is ignored (default).
      * @param separator separator
-     * @param regex If true, value is regex.
      */
-    public LabelValueCreator(String[] labels,
-                             boolean formatIgnored,
-                             String separator,
-                             boolean regex) {
-        super(labels, formatIgnored, separator, regex);
+    public StringSplitter(String separator) {
+        this.separator = separator;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void valueCreate(String[] strings, Value value) {
-        for (int i = 0; i < strings.length; i++) {
-            value.addPrimitiveValue(labels[i], strings[i]);
-        }
+    public String[] split(String str) {
+        return StringUtil.split(str, separator, false);
     }
 }
