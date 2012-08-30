@@ -45,7 +45,7 @@ public class OptionUtil {
     /**
      * job name option
      */
-    public static final String JOB_NAME = "n";
+    public static final String JOB_NAME = "j";
 
     /**
      * default number of thread number
@@ -100,9 +100,9 @@ public class OptionUtil {
      * If split size option is true, returns thread number. If false, returns split size.
      * @return If true, local mode.
      */
-    public int getSplitSize() {
+    public long getSplitSize() {
         if (cli.hasOption(SPLIT_SIZE)) {
-            return Integer.valueOf(cli.getOptionValue(SPLIT_SIZE));
+            return Long.valueOf(cli.getOptionValue(SPLIT_SIZE));
         }
 
         return DEFAULT_SPLIT_SIZE;
