@@ -1,4 +1,5 @@
 0.1.3
+ * add: meta data setting
  * update: minor upgrade
  * supported input data separator regex.
 
