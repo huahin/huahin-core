@@ -23,6 +23,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.huahinframework.core.io.Key;
 import org.huahinframework.core.io.Record;
 import org.huahinframework.core.io.Value;
+import org.huahinframework.core.io.ValueWritable;
 import org.huahinframework.core.writer.BasicWriter;
 import org.huahinframework.core.writer.CombineWriter;
 import org.huahinframework.core.writer.Writer;
@@ -69,15 +70,27 @@ public abstract class Filter extends Mapper<Key, Value, Key, Value> {
     protected Context context;
     private Writer writer;
 
+    private String[] inputLabels;
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public void map(Key key, Value value, Context context)
             throws IOException,InterruptedException {
         writer.setContext(context);
         init();
 
         Record record = new Record();
+        if (inputLabels != null) {
+            int i = 0;
+            for (ValueWritable vw : key.getGrouping()) {
+                vw.getLabel().set(inputLabels[i++]);
+            }
+            for (ValueWritable vw : value.getValues()) {
+                vw.getLabel().set(inputLabels[i++]);
+            }
+        }
         record.setKey(key);
         record.setValue(value);
 
@@ -88,18 +101,24 @@ public abstract class Filter extends Mapper<Key, Value, Key, Value> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setup(Context context)
             throws IOException ,InterruptedException {
         this.context = context;
+        inputLabels = context.getConfiguration().getStrings(SimpleJob.BEFORE_SUMMARIZER_OUTPUT_LABELS);
+        boolean label =
+                context.getConfiguration().getStrings(SimpleJob.FILETER_OUTPUT_LABELS) == null ?
+                        true : false;
+
         try {
             if (context.getCombinerClass() != null) {
                 writer = new CombineWriter(context.getCombinerClass(),
                                            getIntParameter(SimpleJob.COMBINE_CACHE));
             } else {
-                writer = new BasicWriter();
+                writer = new BasicWriter(label);
             }
         } catch (Exception e) {
-            writer = new BasicWriter();
+            writer = new BasicWriter(label);
         }
         filterSetup();
     }

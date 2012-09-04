@@ -155,6 +155,8 @@ public abstract class SimpleJobTool extends Configured implements Tool {
         output = setOutputPath(this.args);
         setup();
 
+        String[] beforeSummarizerOutputLabel = null;
+
         // Make the intermediate path
         if (autoIntermediatePath) {
             int stepNo = 1;
@@ -170,6 +172,11 @@ public abstract class SimpleJobTool extends Configured implements Tool {
                         } else {
                             SimpleTextInputFormat.setInputPaths(j, input);
                             j.setInputFormatClass(SimpleTextInputFormat.class);
+
+                            String[] summarizerOutputLabels = sj.getSummarizerOutputLabels();
+                            if (summarizerOutputLabels != null) {
+                                beforeSummarizerOutputLabel = summarizerOutputLabels;
+                            }
                         }
                     } else {
                         TextInputFormat.setInputPaths(j, input);
@@ -178,6 +185,20 @@ public abstract class SimpleJobTool extends Configured implements Tool {
                 } else {
                     SequenceFileInputFormat.setInputPaths(j, lastIntermediatePath);
                     j.setInputFormatClass(SequenceFileInputFormat.class);
+
+                    if (j instanceof SimpleJob) {
+                        SimpleJob sj = (SimpleJob) j;
+                        if (!sj.isNatural()) {
+                            if (beforeSummarizerOutputLabel != null) {
+                                j.getConfiguration().setStrings(SimpleJob.BEFORE_SUMMARIZER_OUTPUT_LABELS,
+                                                                beforeSummarizerOutputLabel);
+                            }
+                            String[] summarizerOutputLabels = sj.getSummarizerOutputLabels();
+                            if (summarizerOutputLabels != null) {
+                                beforeSummarizerOutputLabel = summarizerOutputLabels;
+                            }
+                        }
+                    }
                 }
 
                 lastIntermediatePath = String.format(INTERMEDIATE_PATH, output, jobName, stepNo);

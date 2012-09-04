@@ -691,7 +691,7 @@ public class Record {
         }
 
         if (o.getType() != type) {
-            throw new ClassCastException("object is not " + objectName + ": [" + o.getType() + "] = " + o.getObject());
+            throw new ClassCastException("object is not " + objectName + ": "+ label + "[" + o.getType() + "] = " + o.getObject());
         }
 
         return o;
@@ -717,7 +717,7 @@ public class Record {
         }
 
         if (o.getType() != type) {
-            throw new ClassCastException("object is not " + objectName + ": [" + o.getType() + "] = " + o.getObject());
+            throw new ClassCastException("object is not " + objectName + ": "+ label + "[" + o.getType() + "] = " + o.getObject());
         }
 
         return o;

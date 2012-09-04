@@ -35,6 +35,9 @@ import org.huahinframework.core.lib.partition.SimpleSortComparator;
 public class SimpleJob extends Job {
     public static final String ONPREMISE = "ONPREMISE";
     public static final String LABELS = "LABELS";
+    public static final String FILETER_OUTPUT_LABELS = "FILETER_OUTPUT_LABELS";
+    public static final String SUMMARIZER_OUTPUT_LABELS = "SUMMARIZER_OUTPUT_LABELS";
+    public static final String BEFORE_SUMMARIZER_OUTPUT_LABELS = "BEFORE_SUMMARIZER_OUTPUT_LABELS";
     public static final String MASTER_LABELS = "MASTER_LABELS";
     public static final String MASTER_PATH = "MASTER_PATH";
     public static final String JOIN_REGEX = "JOIN_REGEX";
@@ -263,6 +266,52 @@ public class SimpleJob extends Job {
         conf.set(MASTER_PATH, masterPath);
         conf.set(MASTER_SEPARATOR, separator);
         conf.setBoolean(JOIN_REGEX, regex);
+        return this;
+    }
+
+    /**
+     * TODO: set detail.
+     * @param labels
+     * @return
+     */
+    public SimpleJob withFilterOutputLabels(String[] labels) {
+        conf.setStrings(FILETER_OUTPUT_LABELS, labels);
+        return this;
+    }
+
+    /**
+     * TODO: set detail.
+     * @return
+     */
+    public String[] getFilterOutputLabels() {
+        return conf.getStrings(FILETER_OUTPUT_LABELS);
+    }
+
+    /**
+     * TODO: set detail.
+     * @param labels
+     * @return
+     */
+    public SimpleJob withSummarizerOutputLabels(String[] labels) {
+        conf.setStrings(SUMMARIZER_OUTPUT_LABELS, labels);
+        return this;
+    }
+
+    /**
+     * TODO: set detail.
+     * @return
+     */
+    public String[] getSummarizerOutputLabels() {
+        return conf.getStrings(SUMMARIZER_OUTPUT_LABELS);
+    }
+
+    /**
+     * TODO: set detail.
+     * @param labels
+     * @return
+     */
+    public SimpleJob setBeforeSummarizerOutputLabeles(String[] labels) {
+        conf.setStrings(BEFORE_SUMMARIZER_OUTPUT_LABELS, labels);
         return this;
     }
 

@@ -22,6 +22,7 @@ import java.io.IOException;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.huahinframework.core.io.Record;
+import org.huahinframework.core.io.ValueWritable;
 
 /**
  * BasicWriter is basic Context#write.
@@ -31,6 +32,15 @@ public class BasicWriter implements Writer {
 
     @SuppressWarnings("rawtypes")
     private TaskInputOutputContext context;
+
+    private boolean label;
+
+    /**
+     * @param label if true, output label.
+     */
+    public BasicWriter(boolean label) {
+        this.label = label;
+    }
 
     /**
      * {@inheritDoc}
@@ -50,6 +60,15 @@ public class BasicWriter implements Writer {
 
         if (record.isValueEmpty()) {
             record.setValue(defaultRecord.getValue());
+        }
+
+        if (!label) {
+            for (ValueWritable vw : record.getKey().getGrouping()) {
+                vw.getLabel().clear();
+            }
+            for (ValueWritable vw : record.getValue().getValues()) {
+                vw.getLabel().clear();
+            }
         }
 
         context.write(record.isGroupingNothing() ? NullWritable.get() : record.getKey(),

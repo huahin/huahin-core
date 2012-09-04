@@ -17,6 +17,7 @@
  */
 package org.huahinframework.core.io;
 
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.io.ArrayWritable;
@@ -77,6 +78,22 @@ public class Value extends BasicWritable {
         }
 
         return sb.substring(0, sb.length() -1);
+    }
+
+    /**
+     * Returns a value that is used for values
+     * @return values
+     */
+    public List<ValueWritable> getValues() {
+        return values;
+    }
+
+    /**
+     * set new values
+     * @param values values
+     */
+    public void setValues(List<ValueWritable> values) {
+        this.values = values;
     }
 
     /**

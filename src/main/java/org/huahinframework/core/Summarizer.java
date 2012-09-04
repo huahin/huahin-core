@@ -25,6 +25,7 @@ import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.huahinframework.core.io.Key;
 import org.huahinframework.core.io.Record;
 import org.huahinframework.core.io.Value;
+import org.huahinframework.core.io.ValueWritable;
 import org.huahinframework.core.writer.BasicWriter;
 import org.huahinframework.core.writer.Writer;
 
@@ -69,17 +70,31 @@ import org.huahinframework.core.writer.Writer;
 public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
     protected Context context;
     protected boolean combine = false;
-    private Writer writer = new BasicWriter();
+    private Writer writer;
     private Iterator<Value> recordIte;
     private Record currentRecord = new Record();
+    private Record defaultGroupRecord = new Record();
+    private String[] inputLabels;
+    private String[] valuesLabels;
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void reduce(Key key, Iterable<Value> values, Context context)
             throws IOException ,InterruptedException {
         writer.setContext(context);
         init();
+
+        if (inputLabels != null) {
+            setupLabel(key);
+        } else {
+            Key k = new Key();
+            for (ValueWritable vw : key.getGrouping()) {
+                k.getGrouping().add(new ValueWritable(vw.getLabel().toString(), vw.getValue()));
+            }
+            defaultGroupRecord.setKey(k);
+        }
 
         currentRecord.setKey(key);
         recordIte = values.iterator();
@@ -101,6 +116,16 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
         writer.setContext(context);
         init();
 
+        if (inputLabels != null) {
+            setupLabel(key);
+        } else {
+            Key k = new Key();
+            for (ValueWritable vw : key.getGrouping()) {
+                k.getGrouping().add(new ValueWritable(vw.getLabel().toString(), vw.getValue()));
+            }
+            defaultGroupRecord.setKey(k);
+        }
+
         currentRecord.setKey(key);
         recordIte = values.iterator();
         summarize(writer);
@@ -109,10 +134,38 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setup(Context context)
             throws IOException ,InterruptedException {
         this.context = context;
+        inputLabels = context.getConfiguration().getStrings(SimpleJob.FILETER_OUTPUT_LABELS);
+        if (inputLabels == null) {
+            inputLabels = context.getConfiguration().getStrings(SimpleJob.BEFORE_SUMMARIZER_OUTPUT_LABELS);
+        }
+        boolean label =
+                context.getConfiguration().getStrings(SimpleJob.SUMMARIZER_OUTPUT_LABELS) == null ?
+                        true : false;
+        writer = new BasicWriter(label);
         summarizerSetup();
+    }
+
+    /**
+     * setup label
+     * @param key key
+     */
+    private void setupLabel(Key key) {
+        int i = 0;
+        Key k = new Key();
+        for (ValueWritable vw : key.getGrouping()) {
+            vw.getLabel().set(inputLabels[i++]);
+            k.getGrouping().add(new ValueWritable(vw.getLabel().toString(), vw.getValue()));
+        }
+        defaultGroupRecord.setKey(k);
+
+        valuesLabels = new String[inputLabels.length - i];
+        for (int j = 0; j < valuesLabels.length; j++) {
+            valuesLabels[j] = inputLabels[i++];
+        }
     }
 
     /**
@@ -129,7 +182,16 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
      * @return the next {@link Record} in the iteration.
      */
     protected Record next(Writer writer) {
-        currentRecord.setValue(recordIte.next());
+        Value value = recordIte.next();
+
+        if (valuesLabels != null) {
+            int i = 0;
+            for (ValueWritable vw : value.getValues()) {
+                vw.getLabel().set(valuesLabels[i++]);
+            }
+        }
+
+        currentRecord.setValue(value);
         writer.setDefaultRecord(currentRecord);
         return currentRecord;
     }
@@ -147,7 +209,7 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
      * @return grouping record
      */
     protected Record getGroupingRecord() {
-        return currentRecord;
+        return defaultGroupRecord;
     }
 
     /**
