@@ -270,9 +270,10 @@ public class SimpleJob extends Job {
     }
 
     /**
-     * TODO: set detail.
-     * @param labels
-     * @return
+     * Set to output labels of Filter.
+     * (By setting the meta-information, you can expect up the performance.)
+     * @param labels labels
+     * @return this
      */
     public SimpleJob withFilterOutputLabels(String[] labels) {
         conf.setStrings(FILETER_OUTPUT_LABELS, labels);
@@ -280,17 +281,18 @@ public class SimpleJob extends Job {
     }
 
     /**
-     * TODO: set detail.
-     * @return
+     * Returns output labels of Filter
+     * @return labels
      */
     public String[] getFilterOutputLabels() {
         return conf.getStrings(FILETER_OUTPUT_LABELS);
     }
 
     /**
-     * TODO: set detail.
-     * @param labels
-     * @return
+     * Set to output labels Summarizer.
+     * (By setting the meta-information, you can expect up the performance.)
+     * @param labels labels
+     * @return this
      */
     public SimpleJob withSummarizerOutputLabels(String[] labels) {
         conf.setStrings(SUMMARIZER_OUTPUT_LABELS, labels);
@@ -298,17 +300,17 @@ public class SimpleJob extends Job {
     }
 
     /**
-     * TODO: set detail.
-     * @return
+     * Returns output labels of Summarizer
+     * @return labels labels
      */
     public String[] getSummarizerOutputLabels() {
         return conf.getStrings(SUMMARIZER_OUTPUT_LABELS);
     }
 
     /**
-     * TODO: set detail.
-     * @param labels
-     * @return
+     * Set the output labels of the last Job Summarizer.
+     * @param labels before job labels
+     * @return this
      */
     public SimpleJob setBeforeSummarizerOutputLabeles(String[] labels) {
         conf.setStrings(BEFORE_SUMMARIZER_OUTPUT_LABELS, labels);
