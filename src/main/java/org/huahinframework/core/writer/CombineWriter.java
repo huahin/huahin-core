@@ -57,6 +57,7 @@ public class CombineWriter implements Writer {
     public CombineWriter(Class<? extends Reducer<?, ?, ?, ?>> clazz, int cache)
             throws InstantiationException, IllegalAccessException {
         this.summarizer = (Summarizer) clazz.newInstance();
+        this.summarizer.setupInMapper();
         this.cache = cache;
     }
 

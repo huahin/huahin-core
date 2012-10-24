@@ -150,6 +150,20 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
     }
 
     /**
+     * setup In-Mapper Combine
+     */
+    public void setupInMapper() {
+        inputLabels = context.getConfiguration().getStrings(SimpleJob.FILETER_OUTPUT_LABELS);
+        if (inputLabels == null) {
+            inputLabels = context.getConfiguration().getStrings(SimpleJob.BEFORE_SUMMARIZER_OUTPUT_LABELS);
+        }
+        boolean label =
+                context.getConfiguration().getStrings(SimpleJob.SUMMARIZER_OUTPUT_LABELS) == null ?
+                        true : false;
+        writer = new BasicWriter(label);
+    }
+
+    /**
      * setup label
      * @param key key
      */
