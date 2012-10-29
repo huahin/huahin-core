@@ -111,32 +111,34 @@ public class ObjectUtil {
                 Byte.valueOf(Integer.valueOf(-126).byteValue()));
         addToIdMap(BytesWritable.class,
                 Byte.valueOf(Integer.valueOf(-125).byteValue()));
-        addToIdMap(FloatWritable.class,
+        addToIdMap(DoubleWritable.class,
                 Byte.valueOf(Integer.valueOf(-124).byteValue()));
-        addToIdMap(IntWritable.class,
+        addToIdMap(FloatWritable.class,
                 Byte.valueOf(Integer.valueOf(-123).byteValue()));
-        addToIdMap(LongWritable.class,
+        addToIdMap(IntWritable.class,
                 Byte.valueOf(Integer.valueOf(-122).byteValue()));
-        addToIdMap(MapWritable.class,
+        addToIdMap(LongWritable.class,
                 Byte.valueOf(Integer.valueOf(-121).byteValue()));
-        addToIdMap(MD5Hash.class,
+        addToIdMap(MapWritable.class,
                 Byte.valueOf(Integer.valueOf(-120).byteValue()));
-        addToIdMap(NullWritable.class,
+        addToIdMap(MD5Hash.class,
                 Byte.valueOf(Integer.valueOf(-119).byteValue()));
-        addToIdMap(ObjectWritable.class,
-                Byte.valueOf(Integer.valueOf(-118).byteValue()));
-        addToIdMap(SortedMapWritable.class,
-                Byte.valueOf(Integer.valueOf(-117).byteValue()));
-        addToIdMap(Text.class,
-                Byte.valueOf(Integer.valueOf(-116).byteValue()));
-        addToIdMap(TwoDArrayWritable.class,
-                Byte.valueOf(Integer.valueOf(-115).byteValue()));
-        addToIdMap(VIntWritable.class,
-                Byte.valueOf(Integer.valueOf(-114).byteValue()));
-        addToIdMap(VLongWritable.class,
-                Byte.valueOf(Integer.valueOf(-113).byteValue()));
         addToIdMap(NullWritable.class,
+                Byte.valueOf(Integer.valueOf(-118).byteValue()));
+        addToIdMap(ObjectWritable.class,
+                Byte.valueOf(Integer.valueOf(-117).byteValue()));
+        addToIdMap(SortedMapWritable.class,
+                Byte.valueOf(Integer.valueOf(-116).byteValue()));
+        addToIdMap(Text.class,
+                Byte.valueOf(Integer.valueOf(-115).byteValue()));
+        addToIdMap(TwoDArrayWritable.class,
+                Byte.valueOf(Integer.valueOf(-114).byteValue()));
+        addToIdMap(VIntWritable.class,
+                Byte.valueOf(Integer.valueOf(-113).byteValue()));
+        addToIdMap(VLongWritable.class,
                 Byte.valueOf(Integer.valueOf(-112).byteValue()));
+        addToIdMap(NullWritable.class,
+                Byte.valueOf(Integer.valueOf(-111).byteValue()));
 
         hadoopObjectMap.put(NULL, NullWritable.class);
         hadoopObjectMap.put(STRING, Text.class);
@@ -180,7 +182,7 @@ public class ObjectUtil {
      * @throws InstantiationException
      */
     public static Writable newInstance(byte id) throws InstantiationException, IllegalAccessException {
-      if (id == Byte.valueOf(Integer.valueOf(-112).byteValue())) {
+      if (id == Byte.valueOf(Integer.valueOf(-111).byteValue())) {
           return NullWritable.get();
       }
 
