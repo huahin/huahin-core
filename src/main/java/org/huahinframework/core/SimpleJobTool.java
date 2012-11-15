@@ -25,14 +25,26 @@ import java.util.regex.Pattern;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
+import org.huahinframework.core.io.Key;
+import org.huahinframework.core.io.Value;
+import org.huahinframework.core.lib.input.MasterTextInputFormat;
 import org.huahinframework.core.lib.input.SimpleTextInputFormat;
+import org.huahinframework.core.lib.input.ValueTextInputFormat;
+import org.huahinframework.core.lib.join.JoinSummarizer;
+import org.huahinframework.core.lib.join.MasterJoinFilter;
+import org.huahinframework.core.lib.join.ValueJoinFilter;
+import org.huahinframework.core.lib.partition.SimpleGroupingComparator;
+import org.huahinframework.core.lib.partition.SimplePartitioner;
+import org.huahinframework.core.lib.partition.SimpleSortComparator;
 import org.huahinframework.core.util.HDFSUtils;
 import org.huahinframework.core.util.LocalPathUtils;
 import org.huahinframework.core.util.OptionUtil;
@@ -159,57 +171,73 @@ public abstract class SimpleJobTool extends Configured implements Tool {
 
         // Make the intermediate path
         if (autoIntermediatePath) {
-            int stepNo = 1;
+            SequencalJobChain tempChain = new SequencalJobChain();
             Job lastJob = null;
             String lastIntermediatePath = null;
             for (Job j : sequencalJobChain.getJobs()) {
                 if (lastJob == null) {
                     if (j instanceof SimpleJob) {
                         SimpleJob sj = (SimpleJob) j;
-                        if (sj.isNatural()) {
-                            TextInputFormat.setInputPaths(j, input);
-                            j.setInputFormatClass(TextInputFormat.class);
-                        } else {
+                        if (!sj.isNatural()) {
                             SimpleTextInputFormat.setInputPaths(j, input);
                             j.setInputFormatClass(SimpleTextInputFormat.class);
 
-                            String[] summarizerOutputLabels = sj.getSummarizerOutputLabels();
-                            if (summarizerOutputLabels != null) {
-                                beforeSummarizerOutputLabel = summarizerOutputLabels;
+                            if (sj.isBigJoin()) {
+                                SimpleJob joinJob = addBigJoinJob(sj);
+                                String masterPath = joinJob.getConfiguration().get(SimpleJob.MASTER_PATH);
+                                MultipleInputs.addInputPath(joinJob, new Path(input), ValueTextInputFormat.class, ValueJoinFilter.class);
+                                MultipleInputs.addInputPath(joinJob, new Path(masterPath), MasterTextInputFormat.class, MasterJoinFilter.class);
+                                tempChain.add(joinJob);
+
+                                lastIntermediatePath = String.format(INTERMEDIATE_PATH, output, jobName, sequencalJobChain.getJobs().size());
+                                intermediatePaths.add(lastIntermediatePath);
+
+                                SequenceFileOutputFormat.setOutputPath(joinJob, new Path(lastIntermediatePath));
+                                joinJob.setOutputFormatClass(SequenceFileOutputFormat.class);
+                                lastJob = joinJob;
+
+                                SequenceFileInputFormat.setInputPaths(j, lastIntermediatePath);
+                                j.setInputFormatClass(SequenceFileInputFormat.class);
                             }
+                        } else {
+                            TextInputFormat.setInputPaths(j, input);
+                            j.setInputFormatClass(TextInputFormat.class);
                         }
-                    } else {
-                        TextInputFormat.setInputPaths(j, input);
-                        j.setInputFormatClass(TextInputFormat.class);
                     }
                 } else {
                     SequenceFileInputFormat.setInputPaths(j, lastIntermediatePath);
                     j.setInputFormatClass(SequenceFileInputFormat.class);
+                }
 
-                    if (j instanceof SimpleJob) {
-                        SimpleJob sj = (SimpleJob) j;
-                        if (!sj.isNatural()) {
-                            if (beforeSummarizerOutputLabel != null) {
-                                j.getConfiguration().setStrings(SimpleJob.BEFORE_SUMMARIZER_OUTPUT_LABELS,
-                                                                beforeSummarizerOutputLabel);
-                            }
-                            String[] summarizerOutputLabels = sj.getSummarizerOutputLabels();
-                            if (summarizerOutputLabels != null) {
-                                beforeSummarizerOutputLabel = summarizerOutputLabels;
-                            }
+                if (j instanceof SimpleJob) {
+                    SimpleJob sj = (SimpleJob) j;
+                    if (!sj.isNatural()) {
+                        if (!sj.isMapper() && !sj.isReducer()) {
+                            continue;
+                        }
+
+                        if (beforeSummarizerOutputLabel != null) {
+                            j.getConfiguration().setStrings(SimpleJob.BEFORE_SUMMARIZER_OUTPUT_LABELS,
+                                                            beforeSummarizerOutputLabel);
+                        }
+                        String[] summarizerOutputLabels = sj.getSummarizerOutputLabels();
+                        if (summarizerOutputLabels != null) {
+                            beforeSummarizerOutputLabel = summarizerOutputLabels;
                         }
                     }
                 }
 
-                lastIntermediatePath = String.format(INTERMEDIATE_PATH, output, jobName, stepNo);
+                lastIntermediatePath = String.format(INTERMEDIATE_PATH, output, jobName, sequencalJobChain.getJobs().size());
                 intermediatePaths.add(lastIntermediatePath);
 
                 SequenceFileOutputFormat.setOutputPath(j, new Path(lastIntermediatePath));
                 j.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-                stepNo++;
+                tempChain.add(j);
                 lastJob = j;
             }
+
+            sequencalJobChain = tempChain;
 
             for (Job j : sequencalJobChain.getJobs()) {
                 if (j instanceof SimpleJob) {
@@ -363,24 +391,92 @@ public abstract class SimpleJobTool extends Configured implements Tool {
                                String separator,
                                boolean formatIgnored,
                                boolean regex) throws IOException {
+        setConfiguration(job, labels, separator, formatIgnored, regex);
+        sequencalJobChain.add(job);
+        // TODO: How to do Reduce task.
+//        job.setNumReduceTasks(1);
+        return job;
+    }
+
+    /**
+     * create big join SimpleJob
+     * @param job job that big join is set.
+     * @return big join {@link SimpleJob}
+     * @throws IOException
+     */
+    private SimpleJob addBigJoinJob(SimpleJob job)
+                throws IOException {
+        Configuration conf = job.getConfiguration();
+        String[] labels = conf.getStrings(SimpleJob.LABELS);
+        String separator = conf.get(SimpleJob.SEPARATOR);
+        boolean regex = conf.getBoolean(SimpleJob.SEPARATOR_REGEX, false);
+        boolean formatIgnored = conf.getBoolean(SimpleJob.FORMAT_IGNORED, false);
+
+        SimpleJob joinJob = new SimpleJob(conf, jobName, true);
+        setConfiguration(joinJob, labels, separator, formatIgnored, regex);
+
+        Configuration joinConf = joinJob.getConfiguration();
+        joinConf.setStrings(SimpleJob.MASTER_LABELS, conf.getStrings(SimpleJob.MASTER_LABELS));
+        joinConf.set(SimpleJob.SIMPLE_JOIN_MASTER_COLUMN, conf.get(SimpleJob.SIMPLE_JOIN_MASTER_COLUMN));
+        joinConf.set(SimpleJob.SIMPLE_JOIN_DATA_COLUMN, conf.get(SimpleJob.SIMPLE_JOIN_DATA_COLUMN));
+        joinConf.set(SimpleJob.MASTER_PATH, conf.get(SimpleJob.MASTER_PATH));
+        joinConf.set(SimpleJob.MASTER_SEPARATOR, conf.get(SimpleJob.MASTER_SEPARATOR));
+
+        joinJob.setMapOutputKeyClass(Key.class);
+        joinJob.setMapOutputValueClass(Value.class);
+
+        joinJob.setPartitionerClass(SimplePartitioner.class);
+        joinJob.setGroupingComparatorClass(SimpleGroupingComparator.class);
+        joinJob.setSortComparatorClass(SimpleSortComparator.class);
+
+        joinJob.setSummarizer(JoinSummarizer.class);
+
+        if (!job.isMapper() && !job.isReducer()) {
+            joinConf.setBoolean(SimpleJob.ONLY_JOIN, true);
+            joinJob.setOutputKeyClass(Value.class);
+            joinJob.setOutputValueClass(NullWritable.class);
+        } else {
+            joinJob.setOutputKeyClass(Key.class);
+            joinJob.setOutputValueClass(Value.class);
+        }
+
+        return joinJob;
+    }
+
+    /**
+     * setting configure
+     * @param job new {@link SimpleJob}
+     * @param labels label of input data
+     * @param separator separator of data
+     * @param formatIgnored
+     * If true, {@link DataFormatException} will be throw if there is a format error.
+     * If false is ignored (default).
+     * @param regex If true, value is regex
+     */
+    private void setConfiguration(SimpleJob job,
+                                  String[] labels,
+                                  String separator,
+                                  boolean formatIgnored,
+                                  boolean regex) {
+        Configuration conf = job.getConfiguration();
         if (labels != null) {
-            job.getConfiguration().setStrings(SimpleJob.LABELS, labels);
+            conf.setStrings(SimpleJob.LABELS, labels);
         }
 
         if (separator != null) {
-            job.getConfiguration().set(SimpleJob.SEPARATOR, separator);
+            conf.set(SimpleJob.SEPARATOR, separator);
         }
 
         if (regex) {
-            job.getConfiguration().setBoolean(SimpleJob.SEPARATOR_REGEX, true);
+            conf.setBoolean(SimpleJob.SEPARATOR_REGEX, true);
         }
 
         if (pathUtils instanceof HDFSUtils) {
-            job.getConfiguration().setBoolean(SimpleJob.ONPREMISE, true);
+            conf.setBoolean(SimpleJob.ONPREMISE, true);
         } else if(pathUtils instanceof S3Utils) {
             S3Utils u = (S3Utils) pathUtils;
-            job.getConfiguration().set(SimpleJob.AWS_ACCESS_KEY, u.getAccessKey());
-            job.getConfiguration().set(SimpleJob.AWS_SECRET_KEY, u.getSecretKey());
+            conf.set(SimpleJob.AWS_ACCESS_KEY, u.getAccessKey());
+            conf.set(SimpleJob.AWS_SECRET_KEY, u.getSecretKey());
 
             if (sequencalJobChain.isEmpty()) {
                 FileInputFormat.setMinInputSplitSize(job, 134217728);
@@ -390,9 +486,5 @@ public abstract class SimpleJobTool extends Configured implements Tool {
 
         job.setJarByClass(SimpleJobTool.class);
         job.setFormatIgnored(formatIgnored);
-        sequencalJobChain.add(job);
-        // TODO: How to do Reduce task.
-//        job.setNumReduceTasks(1);
-        return job;
     }
 }

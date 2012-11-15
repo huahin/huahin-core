@@ -41,6 +41,7 @@ public class SimpleJob extends Job {
     public static final String MASTER_LABELS = "MASTER_LABELS";
     public static final String MASTER_PATH = "MASTER_PATH";
     public static final String JOIN_REGEX = "JOIN_REGEX";
+    public static final String ONLY_JOIN = "ONLY_JOIN";
     public static final String SIMPLE_JOIN_MASTER_COLUMN = "SIMPLE_JOIN_MASTER_COLUMN";
     public static final String SIMPLE_JOIN_DATA_COLUMN = "SIMPLE_JOIN_DATA_COLUMN";
     public static final String SEPARATOR = "SEPARATOR";
@@ -53,6 +54,8 @@ public class SimpleJob extends Job {
     public static final String AWS_SECRET_KEY = "AWS_SECRET_KEY";
 
     public static final int DEFAULT_COMBAIN_CACHE = 200;
+
+    private boolean bigJoin;
 
     private boolean natural = false;
     private boolean mapper = false;
@@ -270,6 +273,45 @@ public class SimpleJob extends Job {
     }
 
     /**
+     * to join the data that does not fit into memory.
+     * @param masterLabels label of master data
+     * @param masterColumn master column
+     * @param dataColumn data column
+     * @param masterPath master data HDFS path
+     * @return this
+     */
+    public SimpleJob setBigJoin(String[] masterLabels, String masterColumn,
+                                String dataColumn, String masterPath) {
+        String separator = conf.get(SEPARATOR);
+        setBigJoin(masterLabels, masterColumn, dataColumn, masterPath, separator);
+        return this;
+    }
+
+    /**
+     * to join the data that does not fit into memory.
+     * @param masterLabels label of master data
+     * @param masterColumn master column
+     * @param dataColumn data column
+     * @param masterPath master data HDFS path
+     * @param separator separator
+     * @return this
+     */
+    public SimpleJob setBigJoin(String[] masterLabels, String masterColumn, String dataColumn,
+                                String masterPath, String separator) {
+        if (natural) {
+            throw new RuntimeException("Not supported big join for natural job.");
+        }
+
+        bigJoin = true;
+        conf.setStrings(MASTER_LABELS, masterLabels);
+        conf.set(SIMPLE_JOIN_MASTER_COLUMN, masterColumn);
+        conf.set(SIMPLE_JOIN_DATA_COLUMN, dataColumn);
+        conf.set(MASTER_PATH, masterPath);
+        conf.set(MASTER_SEPARATOR, separator);
+        return this;
+    }
+
+    /**
      * Set to output labels of Filter.
      * (By setting the meta-information, you can expect up the performance.)
      * @param labels labels
@@ -411,5 +453,12 @@ public class SimpleJob extends Job {
      */
     public boolean isReducer() {
         return reducer;
+    }
+
+    /**
+     * @return the bigJoin
+     */
+    public boolean isBigJoin() {
+        return bigJoin;
     }
 }

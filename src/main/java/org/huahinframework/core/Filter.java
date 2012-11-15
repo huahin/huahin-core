@@ -143,6 +143,15 @@ public abstract class Filter extends Mapper<Key, Value, Key, Value> {
     }
 
     /**
+     * Get Job Strings parameter
+     * @param name parameter name
+     * @return parameter value
+     */
+    protected String[] getStringsParameter(String name) {
+        return context.getConfiguration().getStrings(name);
+    }
+
+    /**
      * Get Job Boolean parameter
      * @param name parameter name
      * @return parameter value
