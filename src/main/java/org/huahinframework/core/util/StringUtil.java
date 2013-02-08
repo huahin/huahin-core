@@ -108,4 +108,39 @@ public class StringUtil {
 
         return JOB_PREFIX + sb.toString().toUpperCase();
     }
+
+
+    /**
+     * get match string number
+     * @param strings strings
+     * @param s match string
+     * @return match string number
+     */
+    public static int getMatchNo(String[] strings, String s) {
+        for (int i = 0; i < strings.length; i++) {
+            if (s.equals(strings[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * get match string number's
+     * @param strings label's
+     * @param s match string
+     * @return match string number's
+     */
+    public static int[] getMatchNos(String[] strings, String[] s) {
+        int[] nos = new int[s.length];
+        for (int i = 0, j = 0; i < strings.length; i++) {
+            for (int k = 0; k < s.length; k++) {
+                if (s[k].equals(strings[i])) {
+                    nos[j] = i;
+                    j++;
+                }
+            }
+        }
+        return nos;
+    }
 }

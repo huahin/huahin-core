@@ -17,9 +17,11 @@
  */
 package org.huahinframework.core.lib.input.creator;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
@@ -31,76 +33,84 @@ import org.junit.Test;
 /**
  *
  */
-public class JoinValueCreatorTest {
+public class JoinSomeValueCreatorTest {
     @Test
     public void testString() throws DataFormatException {
-        String[] labels = { "AAA", "BBB", "CCC", "DDD" };
-        String[] masterLabels = { "DDD", "NAME" };
+        String[] labels = { "AAA", "BBB", "CCC", "DDD", "EEE" };
+        String[] masterLabels = { "DDD", "EEE", "NAME" };
 
-        Map<String, String[]> simpleJoinMap = new HashMap<String, String[]>();
-        String[] m1 = { "d", "DdddD" };
-        simpleJoinMap.put("d", m1);
-        String[] m2 = { "4", "IV" };
-        simpleJoinMap.put("4", m2);
+        Map<List<String>, String[]> simpleJoinMap = new HashMap<List<String>, String[]>();
+        String[] mv1 = { "d", "e", "DdddD" };
+        simpleJoinMap.put(Arrays.asList("d", "e"), mv1);
+
+        String[] mv2 = { "4", "5", "IV" };
+        simpleJoinMap.put(Arrays.asList("4", "5"), mv2);
 
         Configuration conf = new Configuration();
         conf.setStrings(SimpleJob.MASTER_LABELS, masterLabels);
-        conf.set(SimpleJob.JOIN_DATA_COLUMN, "DDD");
+        String[] join = { "DDD", "EEE" };
+        conf.setStrings(SimpleJob.JOIN_DATA_COLUMN, join);
         ValueCreator valueCreator =
-                new JoinValueCreator(labels, true, "\t", false, simpleJoinMap, conf);
+                new JoinSomeValueCreator(labels, true, "\t", false, simpleJoinMap, conf);
         Value value = new Value();
 
-        String string1 = "a\tb\tc\td";
+        String string1 = "a\tb\tc\td\te";
         valueCreator.create(string1, value);
         assertEquals(value.getPrimitiveValue("AAA"), "a");
         assertEquals(value.getPrimitiveValue("BBB"), "b");
         assertEquals(value.getPrimitiveValue("CCC"), "c");
         assertEquals(value.getPrimitiveValue("DDD"), "d");
+        assertEquals(value.getPrimitiveValue("EEE"), "e");
         assertEquals(value.getPrimitiveValue("NAME"), "DdddD");
 
         value.clear();
-        String string2 = "1\t2\t3\t4";
+        String string2 = "1\t2\t3\t4\t5";
         valueCreator.create(string2, value);
         assertEquals(value.getPrimitiveValue("AAA"), "1");
         assertEquals(value.getPrimitiveValue("BBB"), "2");
         assertEquals(value.getPrimitiveValue("CCC"), "3");
         assertEquals(value.getPrimitiveValue("DDD"), "4");
+        assertEquals(value.getPrimitiveValue("EEE"), "5");
         assertEquals(value.getPrimitiveValue("NAME"), "IV");
     }
 
     @Test
     public void testRegex() throws DataFormatException {
-        String[] labels = { "AAA", "BBB", "CCC", "DDD" };
-        String[] masterLabels = { "DDD", "NAME" };
+        String[] labels = { "AAA", "BBB", "CCC", "DDD", "EEE" };
+        String[] masterLabels = { "DDD", "EEE", "NAME" };
 
-        Map<String, String[]> simpleJoinMap = new HashMap<String, String[]>();
-        String[] m1 = { "d", "DdddD" };
-        simpleJoinMap.put("d", m1);
-        String[] m2 = { "4", "IV" };
-        simpleJoinMap.put("4", m2);
+        Map<List<String>, String[]> simpleJoinMap = new HashMap<List<String>, String[]>();
+        String[] mv1 = { "d", "e", "DdddD" };
+        simpleJoinMap.put(Arrays.asList("d", "e"), mv1);
+
+        String[] mv2 = { "4", "5", "IV" };
+        simpleJoinMap.put(Arrays.asList("4", "5"), mv2);
 
         Configuration conf = new Configuration();
         conf.setStrings(SimpleJob.MASTER_LABELS, masterLabels);
-        conf.set(SimpleJob.JOIN_DATA_COLUMN, "DDD");
+        String[] join = { "DDD", "EEE" };
+        conf.setStrings(SimpleJob.JOIN_DATA_COLUMN, join);
         ValueCreator valueCreator =
-                new JoinValueCreator(labels, true, "^(.*)\\t(.*)\\t(.*)\\t(.*)$", true, simpleJoinMap, conf);
+                new JoinSomeValueCreator(labels, true, "^(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)$", true, simpleJoinMap, conf);
         Value value = new Value();
 
-        String string1 = "a\tb\tc\td";
+        String string1 = "a\tb\tc\td\te";
         valueCreator.create(string1, value);
         assertEquals(value.getPrimitiveValue("AAA"), "a");
         assertEquals(value.getPrimitiveValue("BBB"), "b");
         assertEquals(value.getPrimitiveValue("CCC"), "c");
         assertEquals(value.getPrimitiveValue("DDD"), "d");
+        assertEquals(value.getPrimitiveValue("EEE"), "e");
         assertEquals(value.getPrimitiveValue("NAME"), "DdddD");
 
         value.clear();
-        String string2 = "1\t2\t3\t4";
+        String string2 = "1\t2\t3\t4\t5";
         valueCreator.create(string2, value);
         assertEquals(value.getPrimitiveValue("AAA"), "1");
         assertEquals(value.getPrimitiveValue("BBB"), "2");
         assertEquals(value.getPrimitiveValue("CCC"), "3");
         assertEquals(value.getPrimitiveValue("DDD"), "4");
+        assertEquals(value.getPrimitiveValue("EEE"), "5");
         assertEquals(value.getPrimitiveValue("NAME"), "IV");
     }
 }

@@ -23,8 +23,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import org.apache.hadoop.conf.Configuration;
+import org.huahinframework.core.SimpleJob;
 
 /**
  *
@@ -41,6 +46,20 @@ public class LocalPathUtils implements PathUtils {
             f.delete();
         }
         deletePath.delete();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, String[]> getSimpleMaster(Configuration conf)
+            throws IOException, URISyntaxException {
+        String path = conf.get(SimpleJob.MASTER_PATH);
+        String[] masterLabels = conf.getStrings(SimpleJob.MASTER_LABELS);
+        String separator = conf.get(SimpleJob.MASTER_SEPARATOR);
+        String masterColumn = conf.get(SimpleJob.JOIN_MASTER_COLUMN);
+        int joinColumnNo = StringUtil.getMatchNo(masterLabels, masterColumn);
+        return getSimpleMaster(masterLabels, joinColumnNo, path, separator);
     }
 
     /**
@@ -70,6 +89,63 @@ public class LocalPathUtils implements PathUtils {
             }
 
             String joinData = strings[joinColumnNo];
+            String[] data = new String[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                data[i] = strings[i];
+            }
+
+            m.put(joinData, data);
+        }
+        br.close();
+
+        return m;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<List<String>, String[]> getSimpleColumnsMaster(Configuration conf)
+            throws IOException, URISyntaxException {
+        String path = conf.get(SimpleJob.MASTER_PATH);
+        String[] masterLabels = conf.getStrings(SimpleJob.MASTER_LABELS);
+        String separator = conf.get(SimpleJob.MASTER_SEPARATOR);
+        String[] masterColumn = conf.getStrings(SimpleJob.JOIN_MASTER_COLUMN);
+        int[] joinColumnNo = StringUtil.getMatchNos(masterLabels, masterColumn);
+        return getSimpleColumnsMaster(masterLabels, joinColumnNo, path, separator);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<List<String>, String[]> getSimpleColumnsMaster(String[] masterLabels,
+                                                              int[] joinColumnNo,
+                                                              String path,
+                                                              String separator)
+                                                                  throws IOException, URISyntaxException {
+        Map<List<String>, String[]> m = new HashMap<List<String>, String[]>();
+
+        File file = new File(path);
+        if (!file.exists()) {
+            return null;
+        }
+
+        BufferedReader br =
+                new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+
+        String line;
+        while ((line = br.readLine()) != null) {
+            String[] strings = StringUtil.split(line, separator, false);
+            if (masterLabels.length != strings.length) {
+                continue;
+            }
+
+            List<String> joinData = new ArrayList<String>();
+            for (int i : joinColumnNo) {
+                joinData.add(strings[i]);
+            }
+
             String[] data = new String[strings.length];
             for (int i = 0; i < strings.length; i++) {
                 data[i] = strings[i];

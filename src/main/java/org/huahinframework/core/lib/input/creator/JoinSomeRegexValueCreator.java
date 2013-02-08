@@ -17,7 +17,10 @@
  */
 package org.huahinframework.core.lib.input.creator;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.huahinframework.core.DataFormatException;
@@ -26,11 +29,11 @@ import org.huahinframework.core.io.Value;
 import org.huahinframework.core.util.StringUtil;
 
 /**
- * This class supports the Join when you create a {@link Value}
+ *
  */
-public class JoinValueCreator extends JoinCreator {
-    private int dataJoinNo;
-    private Map<String, String[]> simpleJoinMap;
+public class JoinSomeRegexValueCreator extends JoinCreator {
+    private int[] dataJoinNo;
+    private Map<List<Pattern>, String[]> simpleJoinMap;
 
     /**
      * @param labels label of input data
@@ -42,12 +45,12 @@ public class JoinValueCreator extends JoinCreator {
      * @param simpleJoinMap join map
      * @param conf Hadoop Job Configuration
      */
-    public JoinValueCreator(String[] labels,
-                            boolean formatIgnored,
-                            String separator,
-                            boolean regex,
-                            Map<String, String[]> simpleJoinMap,
-                            Configuration conf) {
+    public JoinSomeRegexValueCreator(String[] labels,
+                                boolean formatIgnored,
+                                String separator,
+                                boolean regex,
+                                Map<List<Pattern>, String[]> simpleJoinMap,
+                                Configuration conf) {
         super(labels, formatIgnored, separator, regex, conf);
         this.simpleJoinMap = simpleJoinMap;
     }
@@ -57,7 +60,7 @@ public class JoinValueCreator extends JoinCreator {
      */
     @Override
     protected void init() {
-        dataJoinNo = StringUtil.getMatchNo(labels, conf.get(SimpleJob.JOIN_DATA_COLUMN));
+        dataJoinNo = StringUtil.getMatchNos(labels, conf.getStrings(SimpleJob.JOIN_DATA_COLUMN));
     }
 
     /**
@@ -69,10 +72,21 @@ public class JoinValueCreator extends JoinCreator {
             value.addPrimitiveValue(labels[i], strings[i]);
         }
 
-        String[] masters = simpleJoinMap.get(strings[dataJoinNo]);
-        if (masters != null) {
-            for (int i = 0; i < masterLabels.length; i++) {
-                value.addPrimitiveValue(masterLabels[i], masters[i]);
+        for (Entry<List<Pattern>, String[]> entry : simpleJoinMap.entrySet()) {
+            List<Pattern> p = entry.getKey();
+            boolean b = true;
+            for (int i = 0; i < dataJoinNo.length; i++) {
+                if (!p.get(i).matcher(strings[dataJoinNo[i]]).matches()) {
+                    b = false;
+                }
+            }
+
+            if (b) {
+                String[] masters = simpleJoinMap.get(p);
+                for (int i = 0; i < masterLabels.length; i++) {
+                    value.addPrimitiveValue(masterLabels[i], masters[i]);
+                }
+                break;
             }
         }
     }

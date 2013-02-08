@@ -17,6 +17,8 @@
  */
 package org.huahinframework.core.lib.input.creator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
@@ -26,11 +28,11 @@ import org.huahinframework.core.io.Value;
 import org.huahinframework.core.util.StringUtil;
 
 /**
- * This class supports the Join when you create a {@link Value}
+ *
  */
-public class JoinValueCreator extends JoinCreator {
-    private int dataJoinNo;
-    private Map<String, String[]> simpleJoinMap;
+public class JoinSomeValueCreator extends JoinCreator {
+    private int[] dataJoinNo;
+    private Map<List<String>, String[]> simpleJoinMap;
 
     /**
      * @param labels label of input data
@@ -42,12 +44,12 @@ public class JoinValueCreator extends JoinCreator {
      * @param simpleJoinMap join map
      * @param conf Hadoop Job Configuration
      */
-    public JoinValueCreator(String[] labels,
-                            boolean formatIgnored,
-                            String separator,
-                            boolean regex,
-                            Map<String, String[]> simpleJoinMap,
-                            Configuration conf) {
+    public JoinSomeValueCreator(String[] labels,
+                                boolean formatIgnored,
+                                String separator,
+                                boolean regex,
+                                Map<List<String>, String[]> simpleJoinMap,
+                                Configuration conf) {
         super(labels, formatIgnored, separator, regex, conf);
         this.simpleJoinMap = simpleJoinMap;
     }
@@ -57,7 +59,7 @@ public class JoinValueCreator extends JoinCreator {
      */
     @Override
     protected void init() {
-        dataJoinNo = StringUtil.getMatchNo(labels, conf.get(SimpleJob.JOIN_DATA_COLUMN));
+        dataJoinNo = StringUtil.getMatchNos(labels, conf.getStrings(SimpleJob.JOIN_DATA_COLUMN));
     }
 
     /**
@@ -69,7 +71,12 @@ public class JoinValueCreator extends JoinCreator {
             value.addPrimitiveValue(labels[i], strings[i]);
         }
 
-        String[] masters = simpleJoinMap.get(strings[dataJoinNo]);
+        List<String> joins = new ArrayList<String>();
+        for (int i = 0; i < dataJoinNo.length; i++) {
+            joins.add(strings[dataJoinNo[i]]);
+        }
+
+        String[] masters = simpleJoinMap.get(joins);
         if (masters != null) {
             for (int i = 0; i < masterLabels.length; i++) {
                 value.addPrimitiveValue(masterLabels[i], masters[i]);

@@ -21,15 +21,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
+import org.apache.hadoop.conf.Configuration;
 import org.huahinframework.core.DataFormatException;
+import org.huahinframework.core.SimpleJob;
 import org.huahinframework.core.io.Value;
+import org.huahinframework.core.util.StringUtil;
 
 /**
  * This class supports the Join(regex) when you create a {@link Value}
  */
-public class JoinRegexValueCreator extends ValueCreator {
-    private String[] masterLabels;
-    private int masterJoinNo;
+public class JoinRegexValueCreator extends JoinCreator {
     private int dataJoinNo;
     private Map<Pattern, String[]> simpleJoinMap;
 
@@ -40,24 +41,25 @@ public class JoinRegexValueCreator extends ValueCreator {
      * If false is ignored (default).
      * @param separator separator
      * @param regex If true, value is regex.
-     * @param masterLabels label of master data
-     * @param masterJoinNo master join column number
-     * @param dataJoinNo data join column number
      * @param simpleJoinMap join map
+     * @param conf Hadoop Job Configuration
      */
     public JoinRegexValueCreator(String[] labels,
                                 boolean formatIgnored,
                                 String separator,
                                 boolean regex,
-                                String[] masterLabels,
-                                int masterJoinNo,
-                                int dataJoinNo,
-                                Map<Pattern, String[]> simpleJoinMap) {
-        super(labels, formatIgnored, separator, regex);
-        this.masterLabels = masterLabels;
-        this.masterJoinNo = masterJoinNo;
-        this.dataJoinNo = dataJoinNo;
+                                Map<Pattern, String[]> simpleJoinMap,
+                                Configuration conf) {
+        super(labels, formatIgnored, separator, regex, conf);
         this.simpleJoinMap = simpleJoinMap;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void init() {
+        dataJoinNo = StringUtil.getMatchNo(labels, conf.get(SimpleJob.JOIN_DATA_COLUMN));
     }
 
     /**
@@ -67,18 +69,14 @@ public class JoinRegexValueCreator extends ValueCreator {
     protected void valueCreate(String[] strings, Value value) {
         for (int i = 0; i < strings.length; i++) {
             value.addPrimitiveValue(labels[i], strings[i]);
-            if (i == dataJoinNo) {
-                for (Entry<Pattern, String[]> entry : simpleJoinMap.entrySet()) {
-                    Pattern p = entry.getKey();
-                    if (p.matcher(strings[i]).matches()) {
-                        String[] masters = entry.getValue();
-                        for (int j = 0; j < masterLabels.length; j++) {
-                            value.addPrimitiveValue(masterLabels[j], masters[j]);
-                            if (j != masterJoinNo) {
-                                value.addPrimitiveValue(masterLabels[j], masters[j]);
-                            }
-                        }
-                    }
+        }
+
+        for (Entry<Pattern, String[]> entry : simpleJoinMap.entrySet()) {
+            Pattern p = entry.getKey();
+            if (p.matcher(strings[dataJoinNo]).matches()) {
+                String[] masters = entry.getValue();
+                for (int i = 0; i < masterLabels.length; i++) {
+                    value.addPrimitiveValue(masterLabels[i], masters[i]);
                 }
             }
         }

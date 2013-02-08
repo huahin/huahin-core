@@ -17,10 +17,13 @@
  */
 package org.huahinframework.core.lib.input.creator;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.huahinframework.core.DataFormatException;
@@ -31,76 +34,92 @@ import org.junit.Test;
 /**
  *
  */
-public class JoinValueCreatorTest {
+public class JoinSomeRegexValueCreatorTest {
     @Test
     public void testString() throws DataFormatException {
-        String[] labels = { "AAA", "BBB", "CCC", "DDD" };
-        String[] masterLabels = { "DDD", "NAME" };
+        String[] labels = { "AAA", "BBB", "CCC", "DDD", "EEE" };
+        String[] masterLabels = { "DDD", "EEE", "NAME" };
 
-        Map<String, String[]> simpleJoinMap = new HashMap<String, String[]>();
-        String[] m1 = { "d", "DdddD" };
-        simpleJoinMap.put("d", m1);
-        String[] m2 = { "4", "IV" };
-        simpleJoinMap.put("4", m2);
+        Map<List<Pattern>, String[]> simpleJoinMap = new HashMap<List<Pattern>, String[]>();
+        String[] m1 = { "^d.*D$", "^e.*E$", "DdddD" };
+        simpleJoinMap.put(Arrays.asList(Pattern.compile("^d.*D$"),
+                                        Pattern.compile("^e.*E$")),
+                          m1);
+
+        String[] m2 = { "^4.*IV$", "^5.*V$", "IV" };
+        simpleJoinMap.put(Arrays.asList(Pattern.compile("^4.*IV$"),
+                                        Pattern.compile("^5.*V$")),
+                          m2);
 
         Configuration conf = new Configuration();
         conf.setStrings(SimpleJob.MASTER_LABELS, masterLabels);
-        conf.set(SimpleJob.JOIN_DATA_COLUMN, "DDD");
+        String[] join = { "DDD", "EEE" };
+        conf.setStrings(SimpleJob.JOIN_DATA_COLUMN, join);
         ValueCreator valueCreator =
-                new JoinValueCreator(labels, true, "\t", false, simpleJoinMap, conf);
+                new JoinSomeRegexValueCreator(labels, true, "\t", false, simpleJoinMap, conf);
         Value value = new Value();
 
-        String string1 = "a\tb\tc\td";
+        String string1 = "a\tb\tc\tdaaaaD\teaaaaE";
         valueCreator.create(string1, value);
         assertEquals(value.getPrimitiveValue("AAA"), "a");
         assertEquals(value.getPrimitiveValue("BBB"), "b");
         assertEquals(value.getPrimitiveValue("CCC"), "c");
-        assertEquals(value.getPrimitiveValue("DDD"), "d");
+        assertEquals(value.getPrimitiveValue("DDD"), "daaaaD");
+        assertEquals(value.getPrimitiveValue("EEE"), "eaaaaE");
         assertEquals(value.getPrimitiveValue("NAME"), "DdddD");
 
         value.clear();
-        String string2 = "1\t2\t3\t4";
+        String string2 = "1\t2\t3\t41111IV\t51111V";
         valueCreator.create(string2, value);
         assertEquals(value.getPrimitiveValue("AAA"), "1");
         assertEquals(value.getPrimitiveValue("BBB"), "2");
         assertEquals(value.getPrimitiveValue("CCC"), "3");
-        assertEquals(value.getPrimitiveValue("DDD"), "4");
+        assertEquals(value.getPrimitiveValue("DDD"), "41111IV");
+        assertEquals(value.getPrimitiveValue("EEE"), "51111V");
         assertEquals(value.getPrimitiveValue("NAME"), "IV");
     }
 
     @Test
     public void testRegex() throws DataFormatException {
-        String[] labels = { "AAA", "BBB", "CCC", "DDD" };
-        String[] masterLabels = { "DDD", "NAME" };
+        String[] labels = { "AAA", "BBB", "CCC", "DDD", "EEE" };
+        String[] masterLabels = { "DDD", "EEE", "NAME" };
 
-        Map<String, String[]> simpleJoinMap = new HashMap<String, String[]>();
-        String[] m1 = { "d", "DdddD" };
-        simpleJoinMap.put("d", m1);
-        String[] m2 = { "4", "IV" };
-        simpleJoinMap.put("4", m2);
+        Map<List<Pattern>, String[]> simpleJoinMap = new HashMap<List<Pattern>, String[]>();
+        String[] m1 = { "^d.*D$", "^e.*E$", "DdddD" };
+        simpleJoinMap.put(Arrays.asList(Pattern.compile("^d.*D$"),
+                                        Pattern.compile("^e.*E$")),
+                          m1);
+
+        String[] m2 = { "^4.*IV$", "^5.*V$", "IV" };
+        simpleJoinMap.put(Arrays.asList(Pattern.compile("^4.*IV$"),
+                                        Pattern.compile("^5.*V$")),
+                          m2);
 
         Configuration conf = new Configuration();
         conf.setStrings(SimpleJob.MASTER_LABELS, masterLabels);
-        conf.set(SimpleJob.JOIN_DATA_COLUMN, "DDD");
+        String[] join = { "DDD", "EEE" };
+        conf.setStrings(SimpleJob.JOIN_DATA_COLUMN, join);
         ValueCreator valueCreator =
-                new JoinValueCreator(labels, true, "^(.*)\\t(.*)\\t(.*)\\t(.*)$", true, simpleJoinMap, conf);
+                new JoinSomeRegexValueCreator(labels, false, "^(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)$", true, simpleJoinMap, conf);
         Value value = new Value();
 
-        String string1 = "a\tb\tc\td";
+        String string1 = "a\tb\tc\tdaaaaD\teaaaaE";
         valueCreator.create(string1, value);
         assertEquals(value.getPrimitiveValue("AAA"), "a");
         assertEquals(value.getPrimitiveValue("BBB"), "b");
         assertEquals(value.getPrimitiveValue("CCC"), "c");
-        assertEquals(value.getPrimitiveValue("DDD"), "d");
+        assertEquals(value.getPrimitiveValue("DDD"), "daaaaD");
+        assertEquals(value.getPrimitiveValue("EEE"), "eaaaaE");
         assertEquals(value.getPrimitiveValue("NAME"), "DdddD");
 
         value.clear();
-        String string2 = "1\t2\t3\t4";
+        String string2 = "1\t2\t3\t41111IV\t51111V";
         valueCreator.create(string2, value);
         assertEquals(value.getPrimitiveValue("AAA"), "1");
         assertEquals(value.getPrimitiveValue("BBB"), "2");
         assertEquals(value.getPrimitiveValue("CCC"), "3");
-        assertEquals(value.getPrimitiveValue("DDD"), "4");
+        assertEquals(value.getPrimitiveValue("DDD"), "41111IV");
+        assertEquals(value.getPrimitiveValue("EEE"), "51111V");
         assertEquals(value.getPrimitiveValue("NAME"), "IV");
     }
 }

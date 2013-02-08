@@ -42,13 +42,19 @@ public class SimpleJob extends Job {
     public static final String MASTER_PATH = "MASTER_PATH";
     public static final String JOIN_REGEX = "JOIN_REGEX";
     public static final String ONLY_JOIN = "ONLY_JOIN";
-    public static final String SIMPLE_JOIN_MASTER_COLUMN = "SIMPLE_JOIN_MASTER_COLUMN";
-    public static final String SIMPLE_JOIN_DATA_COLUMN = "SIMPLE_JOIN_DATA_COLUMN";
+    public static final String JOIN_MASTER_COLUMN = "JOIN_MASTER_COLUMN";
+    public static final String JOIN_DATA_COLUMN = "JOIN_DATA_COLUMN";
     public static final String SEPARATOR = "SEPARATOR";
     public static final String SEPARATOR_REGEX = "SEPARATOR_REGEX";
     public static final String MASTER_SEPARATOR = "MASTER_SEPARATOR";
     public static final String FORMAT_IGNORED = "FORMAT_IGNORED";
     public static final String COMBINE_CACHE = "COMBINE_CACHE";
+
+    public static final String READER_TYPE = "READER_TYPE";
+    public static final int SIMPLE_READER = 0;
+    public static final int LABELS_READER = 1;
+    public static final int SINGLE_COLUMN_JOIN_READER = 2;
+    public static final int SOME_COLUMN_JOIN_READER = 3;
 
     public static final String AWS_ACCESS_KEY = "AWS_ACCESS_KEY";
     public static final String AWS_SECRET_KEY = "AWS_SECRET_KEY";
@@ -263,9 +269,73 @@ public class SimpleJob extends Job {
      */
     public SimpleJob setSimpleJoin(String[] masterLabels, String masterColumn, String dataColumn,
                                    String masterPath, String separator, boolean regex) {
+        conf.setInt(READER_TYPE, SINGLE_COLUMN_JOIN_READER);
         conf.setStrings(MASTER_LABELS, masterLabels);
-        conf.set(SIMPLE_JOIN_MASTER_COLUMN, masterColumn);
-        conf.set(SIMPLE_JOIN_DATA_COLUMN, dataColumn);
+        conf.set(JOIN_MASTER_COLUMN, masterColumn);
+        conf.set(JOIN_DATA_COLUMN, dataColumn);
+        conf.set(MASTER_PATH, masterPath);
+        conf.set(MASTER_SEPARATOR, separator);
+        conf.setBoolean(JOIN_REGEX, regex);
+        return this;
+    }
+
+    /**
+     * Easily supports the Join. To use the setSimpleJoin,
+     * you must be a size master data appear in the memory of the task.
+     * @param masterLabels label of master data
+     * @param masterColumns master column's
+     * @param dataColumns data column's
+     * @param masterPath master data HDFS path
+     * @return this
+     * @throws DataFormatException
+     */
+    public SimpleJob setSimpleJoin(String[] masterLabels, String[] masterColumns,
+                                   String[] dataColumns, String masterPath) throws DataFormatException {
+        String separator = conf.get(SEPARATOR);
+        setSimpleJoin(masterLabels, masterColumns, dataColumns, masterPath, separator, false);
+        return this;
+    }
+
+    /**
+     * Easily supports the Join. To use the setSimpleJoin,
+     * you must be a size master data appear in the memory of the task.
+     * @param masterLabels label of master data
+     * @param masterColumns master column's
+     * @param dataColumns data column's
+     * @param masterPath master data HDFS path
+     * @param regex master join is regex;
+     * @return this
+     * @throws DataFormatException
+     */
+    public SimpleJob setSimpleJoin(String[] masterLabels, String[] masterColumns, String[] dataColumns,
+                                   String masterPath, boolean regex) throws DataFormatException {
+        String separator = conf.get(SEPARATOR);
+        setSimpleJoin(masterLabels, masterColumns, dataColumns, masterPath, separator, regex);
+        return this;
+    }
+
+    /**
+     * Easily supports the Join. To use the setSimpleJoin,
+     * you must be a size master data appear in the memory of the task.
+     * @param masterLabels label of master data
+     * @param masterColumns master column's
+     * @param dataColumns data column's
+     * @param masterPath master data HDFS path
+     * @param separator separator
+     * @param regex master join is regex
+     * @return this
+     * @throws DataFormatException
+     */
+    public SimpleJob setSimpleJoin(String[] masterLabels, String[] masterColumns, String[] dataColumns,
+            String masterPath, String separator, boolean regex) throws DataFormatException {
+        if (masterColumns.length != dataColumns.length) {
+            throw new DataFormatException("masterColumns and dataColumns lenght is miss match.");
+        }
+
+        conf.setInt(READER_TYPE, SOME_COLUMN_JOIN_READER);
+        conf.setStrings(MASTER_LABELS, masterLabels);
+        conf.setStrings(JOIN_MASTER_COLUMN, masterColumns);
+        conf.setStrings(JOIN_DATA_COLUMN, dataColumns);
         conf.set(MASTER_PATH, masterPath);
         conf.set(MASTER_SEPARATOR, separator);
         conf.setBoolean(JOIN_REGEX, regex);
@@ -303,9 +373,55 @@ public class SimpleJob extends Job {
         }
 
         bigJoin = true;
+        conf.setInt(READER_TYPE, SINGLE_COLUMN_JOIN_READER);
         conf.setStrings(MASTER_LABELS, masterLabels);
-        conf.set(SIMPLE_JOIN_MASTER_COLUMN, masterColumn);
-        conf.set(SIMPLE_JOIN_DATA_COLUMN, dataColumn);
+        conf.set(JOIN_MASTER_COLUMN, masterColumn);
+        conf.set(JOIN_DATA_COLUMN, dataColumn);
+        conf.set(MASTER_PATH, masterPath);
+        conf.set(MASTER_SEPARATOR, separator);
+        return this;
+    }
+
+    /**
+     * to join the data that does not fit into memory.
+     * @param masterLabels label of master data
+     * @param masterColumns master column's
+     * @param dataColumns data column's
+     * @param masterPath master data HDFS path
+     * @return this
+     * @throws DataFormatException
+     */
+    public SimpleJob setBigJoin(String[] masterLabels, String[] masterColumns,
+                                String[] dataColumns, String masterPath) throws DataFormatException {
+        String separator = conf.get(SEPARATOR);
+        setBigJoin(masterLabels, masterColumns, dataColumns, masterPath, separator);
+        return this;
+    }
+
+    /**
+     * to join the data that does not fit into memory.
+     * @param masterLabels label of master data
+     * @param masterColumns master column's
+     * @param dataColumns data column's
+     * @param masterPath master data HDFS path
+     * @param separator separator
+     * @return this
+     * @throws DataFormatException
+     */
+    public SimpleJob setBigJoin(String[] masterLabels, String[] masterColumns, String[] dataColumns,
+                                String masterPath, String separator) throws DataFormatException {
+        if (natural) {
+            throw new RuntimeException("Not supported big join for natural job.");
+        }
+        if (masterColumns.length != dataColumns.length) {
+            throw new DataFormatException("masterColumns and dataColumns lenght is miss match.");
+        }
+
+        bigJoin = true;
+        conf.setInt(READER_TYPE, SOME_COLUMN_JOIN_READER);
+        conf.setStrings(MASTER_LABELS, masterLabels);
+        conf.setStrings(JOIN_MASTER_COLUMN, masterColumns);
+        conf.setStrings(JOIN_DATA_COLUMN, dataColumns);
         conf.set(MASTER_PATH, masterPath);
         conf.set(MASTER_SEPARATOR, separator);
         return this;

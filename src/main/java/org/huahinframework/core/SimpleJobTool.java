@@ -415,10 +415,17 @@ public abstract class SimpleJobTool extends Configured implements Tool {
         SimpleJob joinJob = new SimpleJob(conf, jobName, true);
         setConfiguration(joinJob, labels, separator, formatIgnored, regex);
 
+        int type = conf.getInt(SimpleJob.READER_TYPE, -1);
         Configuration joinConf = joinJob.getConfiguration();
+        joinConf.setInt(SimpleJob.READER_TYPE, type);
         joinConf.setStrings(SimpleJob.MASTER_LABELS, conf.getStrings(SimpleJob.MASTER_LABELS));
-        joinConf.set(SimpleJob.SIMPLE_JOIN_MASTER_COLUMN, conf.get(SimpleJob.SIMPLE_JOIN_MASTER_COLUMN));
-        joinConf.set(SimpleJob.SIMPLE_JOIN_DATA_COLUMN, conf.get(SimpleJob.SIMPLE_JOIN_DATA_COLUMN));
+        if (type == SimpleJob.SINGLE_COLUMN_JOIN_READER) {
+            joinConf.set(SimpleJob.JOIN_MASTER_COLUMN, conf.get(SimpleJob.JOIN_MASTER_COLUMN));
+            joinConf.set(SimpleJob.JOIN_DATA_COLUMN, conf.get(SimpleJob.JOIN_DATA_COLUMN));
+        } else if (type == SimpleJob.SOME_COLUMN_JOIN_READER) {
+            joinConf.setStrings(SimpleJob.JOIN_MASTER_COLUMN, conf.getStrings(SimpleJob.JOIN_MASTER_COLUMN));
+            joinConf.setStrings(SimpleJob.JOIN_DATA_COLUMN, conf.getStrings(SimpleJob.JOIN_DATA_COLUMN));
+        }
         joinConf.set(SimpleJob.MASTER_PATH, conf.get(SimpleJob.MASTER_PATH));
         joinConf.set(SimpleJob.MASTER_SEPARATOR, conf.get(SimpleJob.MASTER_SEPARATOR));
 
@@ -459,8 +466,10 @@ public abstract class SimpleJobTool extends Configured implements Tool {
                                   boolean formatIgnored,
                                   boolean regex) {
         Configuration conf = job.getConfiguration();
+        conf.setInt(SimpleJob.READER_TYPE, SimpleJob.SIMPLE_READER);
         if (labels != null) {
             conf.setStrings(SimpleJob.LABELS, labels);
+            conf.setInt(SimpleJob.READER_TYPE, SimpleJob.LABELS_READER);
         }
 
         if (separator != null) {

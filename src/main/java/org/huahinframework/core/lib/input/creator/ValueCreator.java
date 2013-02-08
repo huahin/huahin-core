@@ -64,7 +64,7 @@ public abstract class ValueCreator {
             if (formatIgnored) {
                 throw new DataFormatException("input format error: " +
                                               "label.length = " + labels.length +
-                                              "input.lenght = " + strings.length);
+                                              ", input.lenght = " + strings.length);
             }
         }
 

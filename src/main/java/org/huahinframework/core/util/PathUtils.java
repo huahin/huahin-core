@@ -19,7 +19,10 @@ package org.huahinframework.core.util;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
+
+import org.apache.hadoop.conf.Configuration;
 
 /**
  * Is a utility for the path.
@@ -35,6 +38,14 @@ public interface PathUtils {
 
     /**
      * create simple master data
+     * @param conf Hadoop Job Configuration
+     * @throws IOException
+     */
+    public Map<String, String[]> getSimpleMaster(Configuration conf)
+                                                         throws IOException, URISyntaxException;
+
+    /**
+     * create simple master data
      * @param masterLabels master labels
      * @param joinColumnNo column number for join
      * @param path master path
@@ -45,4 +56,25 @@ public interface PathUtils {
     public Map<String, String[]> getSimpleMaster(String[] masterLabels, int joinColumnNo,
                                                  String path, String separator)
                                                          throws IOException, URISyntaxException;
+
+    /**
+     * create simple column's master data
+     * @param conf Hadoop Job Configuration
+     * @throws IOException
+     */
+    public Map<List<String>, String[]> getSimpleColumnsMaster(Configuration conf)
+                                                         throws IOException, URISyntaxException;
+
+    /**
+     * create simple column's master data
+     * @param masterLabels master labels
+     * @param joinColumnNo column number's for join
+     * @param path master path
+     * @param separator data separator
+     * @return master master data. Dose not exist is null.
+     * @throws IOException
+     */
+    public Map<List<String>, String[]> getSimpleColumnsMaster(String[] masterLabels, int[] joinColumnNo,
+                                                              String path, String separator)
+                                                                  throws IOException, URISyntaxException;
 }

@@ -23,7 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.hadoop.conf.Configuration;
 import org.huahinframework.core.DataFormatException;
+import org.huahinframework.core.SimpleJob;
 import org.huahinframework.core.io.Value;
 import org.junit.Test;
 
@@ -42,8 +44,11 @@ public class JoinRegexValueCreatorTest {
         String[] m2 = { "^4.*IV$", "IV" };
         simpleJoinMap.put(Pattern.compile("^4.*IV$"), m2);
 
+        Configuration conf = new Configuration();
+        conf.setStrings(SimpleJob.MASTER_LABELS, masterLabels);
+        conf.set(SimpleJob.JOIN_DATA_COLUMN, "DDD");
         ValueCreator valueCreator =
-                new JoinRegexValueCreator(labels, false, "\t", false, masterLabels, 0, 3, simpleJoinMap);
+                new JoinRegexValueCreator(labels, false, "\t", false, simpleJoinMap, conf);
         Value value = new Value();
 
         String string1 = "a\tb\tc\tdaaaaD";
@@ -75,8 +80,11 @@ public class JoinRegexValueCreatorTest {
         String[] m2 = { "^4.*IV$", "IV" };
         simpleJoinMap.put(Pattern.compile("^4.*IV$"), m2);
 
+        Configuration conf = new Configuration();
+        conf.setStrings(SimpleJob.MASTER_LABELS, masterLabels);
+        conf.set(SimpleJob.JOIN_DATA_COLUMN, "DDD");
         ValueCreator valueCreator =
-                new JoinRegexValueCreator(labels, false, "^(.*)\\t(.*)\\t(.*)\\t(.*)$", true, masterLabels, 0, 3, simpleJoinMap);
+                new JoinRegexValueCreator(labels, false, "^(.*)\\t(.*)\\t(.*)\\t(.*)$", true, simpleJoinMap, conf);
         Value value = new Value();
 
         String string1 = "a\tb\tc\tdaaaaD";

@@ -17,20 +17,19 @@
  */
 package org.huahinframework.core.lib.input.creator;
 
-import java.util.Map;
-
 import org.apache.hadoop.conf.Configuration;
 import org.huahinframework.core.DataFormatException;
 import org.huahinframework.core.SimpleJob;
 import org.huahinframework.core.io.Value;
-import org.huahinframework.core.util.StringUtil;
 
 /**
  * This class supports the Join when you create a {@link Value}
  */
-public class JoinValueCreator extends JoinCreator {
-    private int dataJoinNo;
-    private Map<String, String[]> simpleJoinMap;
+public abstract class JoinCreator extends ValueCreator {
+    protected Configuration conf;
+    protected String[] masterLabels;
+    protected String masterPath;
+    protected String masterSeparator;
 
     /**
      * @param labels label of input data
@@ -39,41 +38,23 @@ public class JoinValueCreator extends JoinCreator {
      * If false is ignored (default).
      * @param separator separator
      * @param regex If true, value is regex.
-     * @param simpleJoinMap join map
      * @param conf Hadoop Job Configuration
      */
-    public JoinValueCreator(String[] labels,
-                            boolean formatIgnored,
-                            String separator,
-                            boolean regex,
-                            Map<String, String[]> simpleJoinMap,
-                            Configuration conf) {
-        super(labels, formatIgnored, separator, regex, conf);
-        this.simpleJoinMap = simpleJoinMap;
+    public JoinCreator(String[] labels,
+                       boolean formatIgnored,
+                       String separator,
+                       boolean regex,
+                       Configuration conf) {
+        super(labels, formatIgnored, separator, regex);
+        this.conf = conf;
+        this.masterPath = conf.get(SimpleJob.MASTER_PATH);
+        this.masterLabels = conf.getStrings(SimpleJob.MASTER_LABELS);
+        this.masterSeparator = conf.get(SimpleJob.MASTER_SEPARATOR);
+        init();
     }
 
     /**
-     * {@inheritDoc}
+     * init
      */
-    @Override
-    protected void init() {
-        dataJoinNo = StringUtil.getMatchNo(labels, conf.get(SimpleJob.JOIN_DATA_COLUMN));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void valueCreate(String[] strings, Value value) {
-        for (int i = 0; i < strings.length; i++) {
-            value.addPrimitiveValue(labels[i], strings[i]);
-        }
-
-        String[] masters = simpleJoinMap.get(strings[dataJoinNo]);
-        if (masters != null) {
-            for (int i = 0; i < masterLabels.length; i++) {
-                value.addPrimitiveValue(masterLabels[i], masters[i]);
-            }
-        }
-    }
+    protected abstract void init();
 }

@@ -72,7 +72,13 @@ public class JoinSummarizer extends Summarizer {
             while (hasNext()) {
                 Record record = next(writer);
                 Record emitRecord = new Record();
-                emitRecord.addGrouping("JOIN_KEY", record.getGroupingString("JOIN_KEY"));
+                for (int i = 0 ;; i++) {
+                    String s = record.getGroupingString("JOIN_KEY" + i);
+                    if (s == null) {
+                        break;
+                    }
+                    emitRecord.addGrouping("JOIN_KEY" + i, s);
+                }
                 for (String s : valueLabels) {
                     emitRecord.addValue(s, record.getValueString(s));
                 }

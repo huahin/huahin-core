@@ -28,7 +28,7 @@ import org.huahinframework.core.writer.Writer;
  * this filter is master fileter for big join.
  */
 public class MasterJoinFilter extends Filter {
-    private String joinColumn;
+    private String[] joinColumn;
     private String[] masterLabels;
 
     /**
@@ -45,7 +45,11 @@ public class MasterJoinFilter extends Filter {
     public void filter(Record record, Writer writer)
             throws IOException, InterruptedException {
         Record emitRecord = new Record();
-        emitRecord.addGrouping("JOIN_KEY", record.getValueString(joinColumn));
+
+        for (int i = 0; i < joinColumn.length; i++) {
+            emitRecord.addGrouping("JOIN_KEY" + i, record.getValueString(joinColumn[i]));
+        }
+
         emitRecord.addSort(1, Record.SORT_LOWER, 1);
         for (String s : masterLabels) {
             emitRecord.addValue(s, record.getValueString(s));
@@ -58,7 +62,13 @@ public class MasterJoinFilter extends Filter {
      */
     @Override
     public void filterSetup() {
-        joinColumn = getStringParameter(SimpleJob.SIMPLE_JOIN_MASTER_COLUMN);
+        int type = getIntParameter(SimpleJob.READER_TYPE);
+        if (type == SimpleJob.SINGLE_COLUMN_JOIN_READER) {
+            joinColumn = new String[1];
+            joinColumn[0] = getStringParameter(SimpleJob.JOIN_MASTER_COLUMN);
+        } else if (type == SimpleJob.SOME_COLUMN_JOIN_READER) {
+            joinColumn = getStringsParameter(SimpleJob.JOIN_MASTER_COLUMN);
+        }
         masterLabels = getStringsParameter(SimpleJob.MASTER_LABELS);
     }
 }
