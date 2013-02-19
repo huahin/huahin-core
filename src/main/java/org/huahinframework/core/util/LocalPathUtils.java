@@ -52,6 +52,19 @@ public class LocalPathUtils implements PathUtils {
      * {@inheritDoc}
      */
     @Override
+    public long getFileSize(String path) throws IOException, URISyntaxException {
+        File file = new File(path);
+        if (!file.exists()) {
+            return -1;
+        }
+
+        return file.length();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Map<String, String[]> getSimpleMaster(Configuration conf)
             throws IOException, URISyntaxException {
         String path = conf.get(SimpleJob.MASTER_PATH);

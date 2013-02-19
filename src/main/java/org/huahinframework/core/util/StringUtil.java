@@ -109,7 +109,6 @@ public class StringUtil {
         return JOB_PREFIX + sb.toString().toUpperCase();
     }
 
-
     /**
      * get match string number
      * @param strings strings
@@ -142,5 +141,20 @@ public class StringUtil {
             }
         }
         return nos;
+    }
+
+    /**
+     * get Xmx option
+     * @param option configure option
+     * @return -Xmx
+     */
+    public static String getXmx(String option) {
+        String[] args = option.split(" ");
+        for (String s : args) {
+            if (s.startsWith("-Xmx")) {
+                return s;
+            }
+        }
+        return null;
     }
 }

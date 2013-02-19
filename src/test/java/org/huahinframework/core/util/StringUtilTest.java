@@ -41,4 +41,17 @@ public class StringUtilTest {
         String[] ss = StringUtil.split(STR, StringUtil.TAB, false);
         assertArrayEquals(ss, NOT_TRIM);
     }
+
+    @Test
+    public void testGetMxm() {
+        String s = null;
+        s = StringUtil.getXmx("-Xmx1024 -Djava.net.preferIPv4Stack=true");
+        assertEquals(s, "-Xmx1024");
+
+        s = StringUtil.getXmx("-Xmx1024m -Djava.net.preferIPv4Stack=true");
+        assertEquals(s, "-Xmx1024m");
+
+        s = StringUtil.getXmx("-Djava.net.preferIPv4Stack=true -Xmx512m");
+        assertEquals(s, "-Xmx512m");
+    }
 }

@@ -37,6 +37,15 @@ public interface PathUtils {
     public void delete(String path) throws IOException, URISyntaxException;
 
     /**
+     * get file size
+     * @param path
+     * @return file byte size
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+    public long getFileSize(String path)  throws IOException, URISyntaxException;;
+
+    /**
      * create simple master data
      * @param conf Hadoop Job Configuration
      * @throws IOException

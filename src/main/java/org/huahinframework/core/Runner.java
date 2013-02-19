@@ -86,4 +86,17 @@ public class Runner {
     public void addJob(String name, Class<? extends SimpleJobTool> clazz) {
         jobMap.put(name, clazz);
     }
+
+    /**
+     * get job list
+     * @return job list
+     */
+    public String[] getJobList() {
+        String[] strings = new String[jobMap.keySet().size()];
+        int i = 0;
+        for (String s : jobMap.keySet()) {
+            strings[i++] = s;
+        }
+        return strings;
+    }
 }

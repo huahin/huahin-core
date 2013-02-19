@@ -89,6 +89,17 @@ public class S3Utils implements PathUtils {
      * {@inheritDoc}
      */
     @Override
+    public long getFileSize(String path) throws IOException, URISyntaxException {
+        URI uri = new URI(path);
+        String key = uri.getPath().substring(1);
+        S3Object s3Object = s3.getObject(uri.getHost(), key);
+        return s3Object.getObjectMetadata().getContentLength();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Map<String, String[]> getSimpleMaster(Configuration conf)
             throws IOException, URISyntaxException {
         String path = conf.get(SimpleJob.MASTER_PATH);

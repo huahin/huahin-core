@@ -64,6 +64,19 @@ public class HDFSUtils implements PathUtils {
      * {@inheritDoc}
      */
     @Override
+    public long getFileSize(String path) throws IOException, URISyntaxException {
+        FileSystem fs = FileSystem.get(conf);
+        FileStatus fstatus = fs.getFileStatus(new Path(path));
+        if (fstatus == null) {
+            return -1;
+        }
+        return fstatus.getLen();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Map<String, String[]> getSimpleMaster(Configuration conf)
             throws IOException, URISyntaxException {
         String path = conf.get(SimpleJob.MASTER_PATH);

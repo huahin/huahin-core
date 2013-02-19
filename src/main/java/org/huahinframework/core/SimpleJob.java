@@ -18,6 +18,7 @@
 package org.huahinframework.core;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
@@ -28,6 +29,9 @@ import org.huahinframework.core.io.Value;
 import org.huahinframework.core.lib.partition.SimpleGroupingComparator;
 import org.huahinframework.core.lib.partition.SimplePartitioner;
 import org.huahinframework.core.lib.partition.SimpleSortComparator;
+import org.huahinframework.core.util.PathUtils;
+import org.huahinframework.core.util.SizeUtils;
+import org.huahinframework.core.util.StringUtil;
 
 /**
  * This class is wrapping the {@link Job} class.
@@ -61,6 +65,11 @@ public class SimpleJob extends Job {
 
     public static final int DEFAULT_COMBAIN_CACHE = 200;
 
+    private static final int DEFAULT_AUTOJOIN_THRESHOLD = 600;
+    private static final int DEFAULT_AUTOSOMEJOIN_THRESHOLD = 900;
+    private static final int DEFALUT_CHILD_MEM_SIZE = 200;
+
+    private PathUtils pathUtils;
     private boolean bigJoin;
 
     private boolean natural = false;
@@ -235,8 +244,7 @@ public class SimpleJob extends Job {
     public SimpleJob setSimpleJoin(String[] masterLabels, String masterColumn,
                                    String dataColumn, String masterPath) {
         String separator = conf.get(SEPARATOR);
-        setSimpleJoin(masterLabels, masterColumn, dataColumn, masterPath, separator, false);
-        return this;
+        return setSimpleJoin(masterLabels, masterColumn, dataColumn, masterPath, separator, false);
     }
 
     /**
@@ -252,8 +260,7 @@ public class SimpleJob extends Job {
     public SimpleJob setSimpleJoin(String[] masterLabels, String masterColumn, String dataColumn,
                                    String masterPath, boolean regex) {
         String separator = conf.get(SEPARATOR);
-        setSimpleJoin(masterLabels, masterColumn, dataColumn, masterPath, separator, regex);
-        return this;
+        return setSimpleJoin(masterLabels, masterColumn, dataColumn, masterPath, separator, regex);
     }
 
     /**
@@ -292,8 +299,7 @@ public class SimpleJob extends Job {
     public SimpleJob setSimpleJoin(String[] masterLabels, String[] masterColumns,
                                    String[] dataColumns, String masterPath) throws DataFormatException {
         String separator = conf.get(SEPARATOR);
-        setSimpleJoin(masterLabels, masterColumns, dataColumns, masterPath, separator, false);
-        return this;
+        return setSimpleJoin(masterLabels, masterColumns, dataColumns, masterPath, separator, false);
     }
 
     /**
@@ -310,8 +316,7 @@ public class SimpleJob extends Job {
     public SimpleJob setSimpleJoin(String[] masterLabels, String[] masterColumns, String[] dataColumns,
                                    String masterPath, boolean regex) throws DataFormatException {
         String separator = conf.get(SEPARATOR);
-        setSimpleJoin(masterLabels, masterColumns, dataColumns, masterPath, separator, regex);
-        return this;
+        return setSimpleJoin(masterLabels, masterColumns, dataColumns, masterPath, separator, regex);
     }
 
     /**
@@ -394,8 +399,7 @@ public class SimpleJob extends Job {
     public SimpleJob setBigJoin(String[] masterLabels, String[] masterColumns,
                                 String[] dataColumns, String masterPath) throws DataFormatException {
         String separator = conf.get(SEPARATOR);
-        setBigJoin(masterLabels, masterColumns, dataColumns, masterPath, separator);
-        return this;
+        return setBigJoin(masterLabels, masterColumns, dataColumns, masterPath, separator);
     }
 
     /**
@@ -425,6 +429,144 @@ public class SimpleJob extends Job {
         conf.set(MASTER_PATH, masterPath);
         conf.set(MASTER_SEPARATOR, separator);
         return this;
+    }
+
+    /**
+     * This method is to determine automatically join the Simple and Big.
+     * @param masterLabels label of master data
+     * @param masterColumn master column
+     * @param dataColumn data column
+     * @param masterPath master data HDFS path
+     * @return this
+     * @throws URISyntaxException
+     * @throws IOException
+     */
+    public SimpleJob setJoin(String[] masterLabels, String masterColumn,
+                             String dataColumn, String masterPath) throws IOException, URISyntaxException {
+        String separator = conf.get(SEPARATOR);
+        return setJoin(masterLabels, masterColumn, dataColumn, masterPath, separator, false, DEFAULT_AUTOJOIN_THRESHOLD);
+    }
+
+    /**
+     * This method is to determine automatically join the Simple and Big.
+     * @param masterLabels label of master data
+     * @param masterColumn master column
+     * @param dataColumn data column
+     * @param masterPath master data HDFS path
+     * @param regex master join is regex;
+     * @return this
+     * @throws URISyntaxException
+     * @throws IOException
+     */
+    public SimpleJob setJoin(String[] masterLabels, String masterColumn, String dataColumn,
+                             String masterPath, boolean regex) throws IOException, URISyntaxException {
+        String separator = conf.get(SEPARATOR);
+        return setJoin(masterLabels, masterColumn, dataColumn, masterPath, separator, regex, DEFAULT_AUTOJOIN_THRESHOLD);
+    }
+
+    /**
+     * This method is to determine automatically join the Simple and Big.
+     * @param masterLabels label of master data
+     * @param masterColumn master column
+     * @param dataColumn data column
+     * @param masterPath master data HDFS path
+     * @param separator separator
+     * @param regex master join is regex
+     * @param threshold auto join threshold size(MB). Default 600MB.
+     * @return this
+     * @throws URISyntaxException
+     * @throws IOException
+     */
+    public SimpleJob setJoin(String[] masterLabels, String masterColumn, String dataColumn,
+                             String masterPath, String separator, boolean regex, int threshold) throws IOException, URISyntaxException {
+        if (regex) {
+            return setSimpleJoin(masterLabels, masterColumn, dataColumn,
+                                 masterPath, separator, regex);
+        }
+
+        String javaOpt = conf.get("mapred.child.java.opts");
+        String xmx = StringUtil.getXmx(javaOpt);
+        int xmxSize = SizeUtils.xmx2MB(xmx);
+        int masterSize = SizeUtils.byte2Mbyte(pathUtils.getFileSize(masterPath));
+
+        int freeSize = xmxSize - DEFALUT_CHILD_MEM_SIZE - masterSize;
+        if (freeSize < threshold) {
+            return setBigJoin(masterLabels, masterColumn, dataColumn, masterPath, separator);
+        }
+
+        return setSimpleJoin(masterLabels, masterColumn, dataColumn,
+                             masterPath, separator, regex);
+    }
+
+    /**
+     * This method is to determine automatically join the Simple and Big.
+     * @param masterLabels label of master data
+     * @param masterColumns master column's
+     * @param dataColumns data column's
+     * @param masterPath master data HDFS path
+     * @return this
+     * @throws URISyntaxException
+     * @throws IOException
+     */
+    public SimpleJob setJoin(String[] masterLabels, String[] masterColumns,
+                             String[] dataColumns, String masterPath) throws IOException, URISyntaxException {
+        String separator = conf.get(SEPARATOR);
+        return setJoin(masterLabels, masterColumns, dataColumns, masterPath, separator, false, DEFAULT_AUTOSOMEJOIN_THRESHOLD);
+    }
+
+    /**
+     * This method is to determine automatically join the Simple and Big.
+     * @param masterLabels label of master data
+     * @param masterColumns master column's
+     * @param dataColumns data column's
+     * @param masterPath master data HDFS path
+     * @param regex master join is regex;
+     * @return this
+     * @throws URISyntaxException
+     * @throws IOException
+     */
+    public SimpleJob setJoin(String[] masterLabels, String[] masterColumns, String[] dataColumns,
+                                   String masterPath, boolean regex) throws IOException, URISyntaxException {
+        String separator = conf.get(SEPARATOR);
+        return setJoin(masterLabels, masterColumns, dataColumns, masterPath, separator, regex, DEFAULT_AUTOSOMEJOIN_THRESHOLD);
+    }
+
+    /**
+     * This method is to determine automatically join the Simple and Big.
+     * @param masterLabels label of master data
+     * @param masterColumns master column's
+     * @param dataColumns data column's
+     * @param masterPath master data HDFS path
+     * @param separator separator
+     * @param regex master join is regex
+     * @param threshold auto join threshold size(MB). Default 900MB.
+     * @return this
+     * @throws URISyntaxException
+     * @throws IOException
+     */
+    public SimpleJob setJoin(String[] masterLabels, String[] masterColumns, String[] dataColumns,
+                             String masterPath, String separator, boolean regex, int threshold) throws IOException, URISyntaxException {
+        if (masterColumns.length != dataColumns.length) {
+            throw new DataFormatException("masterColumns and dataColumns lenght is miss match.");
+        }
+
+        if (regex) {
+            return setSimpleJoin(masterLabels, masterColumns, dataColumns,
+                                 masterPath, separator, regex);
+        }
+
+        String javaOpt = conf.get("mapred.child.java.opts");
+        String xmx = StringUtil.getXmx(javaOpt);
+        int xmxSize = SizeUtils.xmx2MB(xmx);
+        int masterSize = SizeUtils.byte2Mbyte(pathUtils.getFileSize(masterPath));
+
+        int freeSize = xmxSize - DEFALUT_CHILD_MEM_SIZE - masterSize;
+        if (freeSize < threshold) {
+            return setBigJoin(masterLabels, masterColumns, dataColumns, masterPath, separator);
+        }
+
+        return setSimpleJoin(masterLabels, masterColumns, dataColumns,
+                             masterPath, separator, regex);
     }
 
     /**
@@ -576,5 +718,12 @@ public class SimpleJob extends Job {
      */
     public boolean isBigJoin() {
         return bigJoin;
+    }
+
+    /**
+     * @param pathUtils the pathUtils to set
+     */
+    public void setPathUtils(PathUtils pathUtils) {
+        this.pathUtils = pathUtils;
     }
 }

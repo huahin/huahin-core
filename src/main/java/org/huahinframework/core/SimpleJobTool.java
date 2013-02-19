@@ -480,6 +480,7 @@ public abstract class SimpleJobTool extends Configured implements Tool {
             conf.setBoolean(SimpleJob.SEPARATOR_REGEX, true);
         }
 
+        job.setPathUtils(pathUtils);
         if (pathUtils instanceof HDFSUtils) {
             conf.setBoolean(SimpleJob.ONPREMISE, true);
         } else if(pathUtils instanceof S3Utils) {
