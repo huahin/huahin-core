@@ -482,8 +482,9 @@ public abstract class SimpleJobTool extends Configured implements Tool {
 
         job.setPathUtils(pathUtils);
         if (pathUtils instanceof HDFSUtils) {
-            conf.setBoolean(SimpleJob.ONPREMISE, true);
+            conf.setInt(SimpleJob.CLUSTER_TYPE, SimpleJob.CLUSTER_TYPE_ONPREMISE);
         } else if(pathUtils instanceof S3Utils) {
+            conf.setInt(SimpleJob.CLUSTER_TYPE, SimpleJob.CLUSTER_TYPE_AWS);
             S3Utils u = (S3Utils) pathUtils;
             conf.set(SimpleJob.AWS_ACCESS_KEY, u.getAccessKey());
             conf.set(SimpleJob.AWS_SECRET_KEY, u.getSecretKey());
@@ -492,6 +493,8 @@ public abstract class SimpleJobTool extends Configured implements Tool {
                 FileInputFormat.setMinInputSplitSize(job, 134217728);
                 FileInputFormat.setMaxInputSplitSize(job, 134217728);
             }
+        } else if(pathUtils instanceof LocalPathUtils) {
+            conf.setInt(SimpleJob.CLUSTER_TYPE, SimpleJob.CLUSTER_TYPE_LOCAL);
         }
 
         job.setJarByClass(SimpleJobTool.class);

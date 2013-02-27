@@ -34,6 +34,7 @@ import org.huahinframework.core.lib.input.creator.JoinValueCreator;
 import org.huahinframework.core.lib.input.creator.LabelValueCreator;
 import org.huahinframework.core.lib.input.creator.SimpleValueCreator;
 import org.huahinframework.core.util.HDFSUtils;
+import org.huahinframework.core.util.LocalPathUtils;
 import org.huahinframework.core.util.PathUtils;
 import org.huahinframework.core.util.S3Utils;
 
@@ -48,11 +49,21 @@ public class SimpleTextRecordReader extends SimpleRecordReader {
     public void init() throws IOException {
         try {
             PathUtils pathUtils = null;
-            if(conf.getBoolean(SimpleJob.ONPREMISE, false)) {
+            int clusterType = conf.getInt(SimpleJob.CLUSTER_TYPE, -1);
+            switch (clusterType) {
+            case SimpleJob.CLUSTER_TYPE_ONPREMISE:
                 pathUtils = new HDFSUtils(conf);
-            } else {
+                break;
+            case SimpleJob.CLUSTER_TYPE_AWS:
                 pathUtils = new S3Utils(conf.get(SimpleJob.AWS_ACCESS_KEY),
                                         conf.get(SimpleJob.AWS_SECRET_KEY));
+                break;
+            case SimpleJob.CLUSTER_TYPE_LOCAL:
+                pathUtils = new LocalPathUtils();
+                break;
+            default:
+                pathUtils = new HDFSUtils(conf);
+                break;
             }
 
             String[] labels = conf.getStrings(SimpleJob.LABELS);

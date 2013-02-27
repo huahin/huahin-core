@@ -1,4 +1,7 @@
 0.1.5
+ * fix: minor bug fix.
+
+0.1.5
  * add: some column join
  * add: auto join. Auto join(join) is to select the SimpleJoin or BigJoin depending on the amount of memory used.
 

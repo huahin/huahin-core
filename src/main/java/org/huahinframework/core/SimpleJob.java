@@ -37,7 +37,6 @@ import org.huahinframework.core.util.StringUtil;
  * This class is wrapping the {@link Job} class.
  */
 public class SimpleJob extends Job {
-    public static final String ONPREMISE = "ONPREMISE";
     public static final String LABELS = "LABELS";
     public static final String FILETER_OUTPUT_LABELS = "FILETER_OUTPUT_LABELS";
     public static final String SUMMARIZER_OUTPUT_LABELS = "SUMMARIZER_OUTPUT_LABELS";
@@ -53,6 +52,11 @@ public class SimpleJob extends Job {
     public static final String MASTER_SEPARATOR = "MASTER_SEPARATOR";
     public static final String FORMAT_IGNORED = "FORMAT_IGNORED";
     public static final String COMBINE_CACHE = "COMBINE_CACHE";
+
+    public static final String CLUSTER_TYPE = "CLUSTER_TYPE";
+    public static final int CLUSTER_TYPE_ONPREMISE = 0;
+    public static final int CLUSTER_TYPE_AWS = 1;
+    public static final int CLUSTER_TYPE_LOCAL = 2;
 
     public static final String READER_TYPE = "READER_TYPE";
     public static final int SIMPLE_READER = 0;
