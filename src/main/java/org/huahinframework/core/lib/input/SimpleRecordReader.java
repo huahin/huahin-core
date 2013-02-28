@@ -57,6 +57,8 @@ public abstract class SimpleRecordReader extends RecordReader<Key, Value> {
     protected Value value = null;
     protected String separator;
     protected boolean regex;
+    protected String fileName;
+    protected long fileLength;
 
     protected ValueCreator valueCreator;
 
@@ -73,6 +75,7 @@ public abstract class SimpleRecordReader extends RecordReader<Key, Value> {
         start = split.getStart();
         end = start + split.getLength();
         final Path file = split.getPath();
+
         compressionCodecs = new CompressionCodecFactory(job);
         final CompressionCodec codec = compressionCodecs.getCodec(file);
 
@@ -98,6 +101,8 @@ public abstract class SimpleRecordReader extends RecordReader<Key, Value> {
                         (int)Math.min((long)Integer.MAX_VALUE, end - start));
         }
 
+        this.fileName = file.getName();
+        this.fileLength = fs.getFileStatus(file).getLen();
         this.conf = context.getConfiguration();
         this.pos = start;
         this.separator = conf.get(SimpleJob.SEPARATOR, StringUtil.COMMA);
@@ -122,6 +127,8 @@ public abstract class SimpleRecordReader extends RecordReader<Key, Value> {
         }
         key.clear();
         key.addPrimitiveValue("KEY", pos);
+        key.addPrimitiveValue("FILE_NAME", fileName);
+        key.addPrimitiveValue("FILE_LENGTH", fileLength);
         if (value == null) {
             value = new Value();
         }

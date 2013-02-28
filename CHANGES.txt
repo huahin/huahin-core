@@ -1,4 +1,8 @@
-0.1.5
+0.1.7
+ * fix: minor bug fix.
+ * update: minor upgrade
+
+0.1.6
  * fix: minor bug fix.
 
 0.1.5
