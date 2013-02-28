@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.huahinframework</groupId>
   <artifactId>huahin-core</artifactId>
-  <version>0.1.7</version>
+  <version>0.1.8-SNAPSHOT</version>
   <packaging>jar</packaging>
   <description>Simple Java framework for Hadoop MapReduce</description>
 
