@@ -163,10 +163,38 @@ public abstract class Filter extends Mapper<Key, Value, Key, Value> {
     /**
      * Get Job Integer parameter
      * @param name parameter name
-     * @return parameterr value
+     * @return parameter value
      */
     protected int getIntParameter(String name) {
         return context.getConfiguration().getInt(name, -1);
+    }
+
+    /**
+     * Get Job Long parameter
+     * @param name parameter name
+     * @return parameter value
+     */
+    protected long getLongParameter(String name) {
+        return context.getConfiguration().getLong(name, -1);
+    }
+
+    /**
+     * Get Job Float parameter
+     * @param name parameter name
+     * @return parameter value
+     */
+    protected float getFloatParameter(String name) {
+        return context.getConfiguration().getFloat(name, -1);
+    }
+
+    /**
+     * Get Job Enum parameter
+     * @param name parameter name
+     * @return parameter value
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    protected Enum getEnumParameter(String name) {
+        return context.getConfiguration().getEnum(name, null);
     }
 
     /**

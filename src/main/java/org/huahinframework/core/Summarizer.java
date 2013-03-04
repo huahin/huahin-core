@@ -263,6 +263,34 @@ public abstract class Summarizer extends Reducer<Key, Value, Key, Value> {
     }
 
     /**
+     * Get Job Long parameter
+     * @param name parameter name
+     * @return parameter value
+     */
+    protected long getLongParameter(String name) {
+        return context.getConfiguration().getLong(name, -1);
+    }
+
+    /**
+     * Get Job Float parameter
+     * @param name parameter name
+     * @return parameter value
+     */
+    protected float getFloatParameter(String name) {
+        return context.getConfiguration().getFloat(name, -1);
+    }
+
+    /**
+     * Get Job Enum parameter
+     * @param name parameter name
+     * @return parameter value
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    protected Enum getEnumParameter(String name) {
+        return context.getConfiguration().getEnum(name, null);
+    }
+
+    /**
      * Will be called for each group.
      */
     public abstract void init();
